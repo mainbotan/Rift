@@ -1,0 +1,13 @@
+{
+  "name": "rift/core",
+  "version": "1.0.0",
+  "type": "library",
+  "autoload": {
+    "psr-4": {
+      "Rift\\": "src/"
+    }
+  },
+  "require": {
+    "php": "^8.2"
+  }
+}

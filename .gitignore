@@ -1,0 +1,15 @@
+# Docker
+docker-compose.override.yml
+.env
+
+# PHP
+vendor/
+.phpunit.result.cache
+
+# Базы данных
+*.sqlite
+/docker/postgres_data/
+
+# IDE
+.idea/
+.vscode/

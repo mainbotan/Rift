@@ -1,15 +1,22 @@
-# Docker
+# === Docker ===
 docker-compose.override.yml
 .env
+docker/postgres_data/  # Volume с данными Postgres
+docker/redis_data/     # Volume с данными Redis
 
-# PHP
+# === Composer ===
 vendor/
+composer.lock         # Не коммитим для библиотеки!
+
+# === Тесты и кэши ===
 .phpunit.result.cache
-
-# Базы данных
+.phpunit.cache
 *.sqlite
-/docker/postgres_data/
 
-# IDE
+# === IDE ===
 .idea/
 .vscode/
+*.swp
+
+# === Системное ===
+.DS_Store

@@ -4,10 +4,11 @@ services:
   php:
     build: .
     volumes:
-      - .:/app  # Монтируем ВЕСЬ проект (чтобы composer.json был доступен)
+      - .:/app:delegated
     working_dir: /app
     environment:
       PHP_ENV: development
+    user: "${UID}:${GID}"
 
   nginx:
     image: nginx:alpine

@@ -1,0 +1,27 @@
+{
+  "name": "rift/core",
+  "version": "1.0.0",
+  "type": "library",
+  "autoload": {
+    "psr-4": {
+      "Rift\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Tests\\": "tests/"
+    }
+  },
+  "require": {
+    "php": "^8.2"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^10.0",
+    "pestphp/pest": "^2.0"
+  },
+  "config": {
+    "allow-plugins": {
+      "pestphp/pest-plugin": true
+    }
+  }
+}

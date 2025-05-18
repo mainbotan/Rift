@@ -7,11 +7,9 @@ use Rift\Core\Router\Resolver as Resolver;
 $resolver = new Resolver(require 'routes.php'); 
 
 $result = $resolver->execute(
-    'GET',
-    '/artist/0eb1239/getTopTracks',
-    [
-        'token' => 'asdasdasdasd' 
-    ]
+    'POST',
+    '/artist/0e1203991/getTopTracks?limit=100&offset=0',
+    []
 );
 
 echo "<pre>";

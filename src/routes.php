@@ -6,11 +6,17 @@ return [
     [
         'path' => '/artist/{id}/getInfo',
         'method' => 'GET',
-        'handler' => ''
+        'handler' => '',
+        'middlewares' => [
+            \Rift\Validators\Validator::class
+        ]
     ],
     [
         'path' => '/artist/{id}/getTopTracks',
         'method' => 'GET',
-        'handler' => ''
+        'handler' => '',
+        'middlewares' => [
+            \Rift\Validators\Validator::class
+        ]
     ]
 ];

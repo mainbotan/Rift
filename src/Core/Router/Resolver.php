@@ -17,7 +17,7 @@ class Resolver extends Response {
     public function execute(
         string $method,
         string $uri,
-        array|null $data
+        ?array $data
     ): ResponseDTO {
         // Отрезаем query string от пути
         $parsedUri = parse_url($uri);
@@ -38,13 +38,20 @@ class Resolver extends Response {
 
                 // Объединяем параметры пути и query
                 parse_str($parsedUri['query'] ?? '', $queryParams);
-                $params = array_merge($params, $queryParams);
+                $params = array_merge($queryParams, $params, $data);
+
+                // Пробегаем по мидлвейрам
+                $middlewares = isset($route['middlewares']) ? $route['middlewares'] : null;
+                $resultOfCheckMiddlewares = $this->checkMiddlewares($middlewares, $params);
+                if ($resultOfCheckMiddlewares->code !== self::HTTP_OK) {
+                    return $resultOfCheckMiddlewares;
+                }
 
                 return parent::response(
                     [
                         'handler' => $route['handler'],
                         'params' => $params,
-                        'payload' => $data,
+                        'resultOfMiddlewares' => $resultOfCheckMiddlewares
                     ],
                     self::HTTP_OK
                 );
@@ -56,6 +63,30 @@ class Resolver extends Response {
             self::HTTP_NOT_FOUND,
             'path not found'
         );
+    }
+
+    /**
+     * Проход по мидлварам
+     */
+    private function checkMiddlewares(
+        array|null $middlewares,
+        array|null $params
+    ): ResponseDTO {
+        if (!is_array($middlewares) || empty($middlewares)) {
+            return parent::response(null, self::HTTP_OK);
+        }
+        
+        foreach ($middlewares as $middleware) {
+            $middlewareClass = new $middleware;
+            $resultOfCheckMiddleware = $middlewareClass->execute($params);
+            
+            // Выход при завале
+            if ($resultOfCheckMiddleware->code !== self::HTTP_OK ) {
+                return $resultOfCheckMiddleware;
+            }
+        }
+
+        return parent::response(null, self::HTTP_OK);
     }
 
     /**

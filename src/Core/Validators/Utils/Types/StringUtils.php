@@ -15,11 +15,11 @@ class StringUtils extends Response
         $length = mb_strlen($value);
 
         if ($length < $min) {
-            return self::error(400, "$fieldName must be at least $min characters");
+            return self::error(self::HTTP_BAD_REQUEST, "$fieldName must be at least $min characters");
         }
 
         if ($length > $max) {
-            return self::error(400, "$fieldName must be no more than $max characters");
+            return self::error(self::HTTP_BAD_REQUEST, "$fieldName must be no more than $max characters");
         }
 
         return self::success(null);
@@ -28,7 +28,7 @@ class StringUtils extends Response
     public static function notEmpty(string $value, string $fieldName = 'string')
     {
         if (trim($value) === '') {
-            return self::error(400, "$fieldName cannot be empty");
+            return self::error(self::HTTP_BAD_REQUEST, "$fieldName cannot be empty");
         }
 
         return self::success(null);

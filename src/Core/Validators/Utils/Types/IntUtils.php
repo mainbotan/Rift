@@ -13,7 +13,7 @@ class IntUtils extends Response
         string $fieldName = 'value'
     ) {
         if ($value < $min || $value > $max) {
-            return self::error(400, "$fieldName must be between $min and $max");
+            return self::error(self::HTTP_BAD_REQUEST, "$fieldName must be between $min and $max");
         }
 
         return self::success(null);
@@ -22,7 +22,7 @@ class IntUtils extends Response
     public static function isPositive(int $value, string $fieldName = 'value')
     {
         if ($value < 0) {
-            return self::error(400, "$fieldName must be positive");
+            return self::error(self::HTTP_BAD_REQUEST, "$fieldName must be positive");
         }
 
         return self::success(null);

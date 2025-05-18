@@ -46,15 +46,27 @@ class Resolver extends Response {
                 if ($resultOfCheckMiddlewares->code !== self::HTTP_OK) {
                     return $resultOfCheckMiddlewares;
                 }
+                
+                // Обращаемся к выполняющему слою
+                if (!isset($route['handler'])) {
+                    return parent::error(self::HTTP_NOT_FOUND, "Path's handler not found");
+                }
 
-                return parent::response(
-                    [
-                        'handler' => $route['handler'],
-                        'params' => $params,
-                        'resultOfMiddlewares' => $resultOfCheckMiddlewares
-                    ],
-                    self::HTTP_OK
-                );
+                $handler = $route['handler'];
+
+                // Проверка: существует ли класс
+                if (!class_exists($handler)) {
+                    return parent::error(self::HTTP_INTERNAL_SERVER_ERROR, "Handler class {$handler} does not exist");
+                }
+
+                // Проверка: реализует ли нужный интерфейс 
+                if (!in_array('Rift\Core\UseCases\UseCaseInterface', class_implements($handler))) {
+                    return parent::error(self::HTTP_INTERNAL_SERVER_ERROR, "Handler {$handler} must implement UseCaseInterface");
+                }
+
+                // Создание экземпляра и вызов
+                $useCase = new $handler;
+                return $useCase->execute($params);
             }
         }
 

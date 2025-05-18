@@ -7,7 +7,7 @@ use Rift\Core\Router\Resolver as Resolver;
 $resolver = new Resolver(require 'routes.php'); 
 
 $result = $resolver->execute(
-    'POST',
+    'GET',
     '/artist/0e1203991/getTopTracks?limit=100&offset=0',
     []
 );

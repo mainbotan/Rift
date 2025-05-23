@@ -1,12 +1,12 @@
 <?php
 
-namespace Rift\Core\Router;
+namespace Rift\Core\Navigation;
 
 // Контракт ответа
 use Rift\Core\Contracts\Response;
 use Rift\Core\Contracts\ResponseDTO;
 
-class Resolver extends Response {
+class Router extends Response {
     public function __construct(
         public array $routes
     ){ }

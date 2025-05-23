@@ -9,16 +9,20 @@ use Rift\Core\Validators\Utils\SchemaValidator;
 class Validator implements ValidatorInterface {
     // Схема запроса
     private array $schema = [
-        'id' => [
+        'name' => [
             'type' => 'string',
             'min' => 3,
-            'max' => 10
+            'max' => 64
         ],
-        'limit' => [
-            'type' => 'int',
-            'min' => 1,
-            'max' => 100,
-            'optional' => true
+        'email' => [
+            'type' => 'string',
+            'min' => 3,
+            'max' => 64
+        ],
+        'password' => [
+            'type' => 'string',
+            'min' => 3,
+            'max' => 64
         ]
     ];
 

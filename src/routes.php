@@ -14,7 +14,7 @@ return [
     [
         'path' => '/artist/{id}/getTopTracks',
         'method' => 'GET',
-        'handler' => \Rift\UseCases\Artist\GetTopTracks::class,
+        'handler' => '',
         'middlewares' => [
             \Rift\Validators\Validator::class
         ]

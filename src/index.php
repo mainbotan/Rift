@@ -21,19 +21,39 @@ $dotenv->safeLoad();
 // use Rift\Configurators\AppTenantConfigurator;
 // $result = AppTenantConfigurator::forTenant('982')->configure();
 
-// Репозитории
+// Системные репозитории
 
-use Rift\Repositories\System\Router;
-$systemRouter = new Router();
-$tenantsRepository = $systemRouter->getRepository('tenants.repo');
-if ($tenantsRepository->code === 200) {
-    $tenantsRepository = $tenantsRepository->result;
+// use Rift\Repositories\System\Router;
+// $systemRouter = new Router();
+// $tenantsRepository = $systemRouter->getRepository('tenants.repo');
 
-    // Запрос к репозиторию
-    $result = $tenantsRepository->createTenant([
-        'name' => 'huila',
-        'email' => 'test@gmail.com',
-        'password' => 123456   
+// if ($tenantsRepository->isSuccess()) {
+//     $tenantsRepository = $tenantsRepository->result;
+
+//     // Запрос к репозиторию
+
+//     // $result = $tenantsRepository->createTenant([
+//     //     'name' => 'huila',
+//     //     'email' => 'testi@gmail.com',
+//     //     'password' => 123456   
+//     // ]);
+
+//     // $result = $tenantsRepository->selectAll(10, 0);
+
+//     // $result = $tenantsRepository->selectById(1);
+// }
+
+
+// Репозитории тенанта
+use Rift\Repositories\Tenant\Router;
+$tenantRouter = Router::forTenant('982');
+$usersRepoRequest = $tenantRouter->getRepository('users.repo');
+if ($usersRepoRequest->isSuccess()) {
+    $usersRepo = $usersRepoRequest->result;
+    $result = $usersRepo->createUser([
+        'name' => 'hui',
+        'password' => '123456',
+        'role' => 'admin'
     ]);
 }
 

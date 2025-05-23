@@ -1,13 +1,13 @@
 <?php
 
-namespace Rift\Repositories\System;
+namespace Rift\Repositories\Tenant;
 
 use PDO;
 use PDOStatement;
 use Rift\Core\Contracts\ResponseDTO;
 use Rift\Core\Repositories\AbstractRepository;
 
-class TenantsRepository extends AbstractRepository
+class UsersRepository extends AbstractRepository
 {
     public function selectById(int $tenantId) {
         $stmt = $this->pdo->prepare("
@@ -33,15 +33,16 @@ class TenantsRepository extends AbstractRepository
         return $this->executeQuery($stmt);
     }
 
-    public function createTenant(array $data): ResponseDTO
+    public function createUser(array $data): ResponseDTO
     {
         $stmt = $this->pdo->prepare("
-            INSERT INTO tenants (email, password) 
-            VALUES (:email, :password)
+            INSERT INTO users (name, password, role) 
+            VALUES (:name, :password, :role)
         ");
         
-        $stmt->bindValue(':email', $data['email'], PDO::PARAM_STR);
+        $stmt->bindValue(':name', $data['name'], PDO::PARAM_STR);
         $stmt->bindValue(':password', $data['password'], PDO::PARAM_STR);
+        $stmt->bindValue(':role', $data['role'], PDO::PARAM_STR);
         
         return $this->executeQuery($stmt);
     }

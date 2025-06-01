@@ -9,7 +9,7 @@ use Rift\Core\Repositories\AbstractRepository;
 
 class TenantsRepository extends AbstractRepository
 {
-    public function selectById(int $tenantId) {
+    public function selectById(int $tenantId): ResponseDTO {
         $stmt = $this->pdo->prepare("
             SELECT * FROM `tenants` 
             WHERE `id` = :id

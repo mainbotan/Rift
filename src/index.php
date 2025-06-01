@@ -11,15 +11,24 @@ $dotenv->safeLoad();
 // Модели
 
 // use Rift\Models\System\Tenants;
-// $result = Tenants::getTableName();
+// $result = Tenants::getMigrationSQL();
+
+// $testData = [
+//     'id' => 100,
+//     'email' => 'invalid_email',
+//     'password' => '12345678',
+//     'status' => 'active' 
+// ];
+// $result = Tenants::validateField('password', '12345');
 
 // Запуск схем
 
-// use Rift\Configurators\AppSystemConfigurator;
-// $result = AppSystemConfigurator::configure();
+use Rift\Configurators\AppSystemConfigurator;
+$result = AppSystemConfigurator::configure();
 
 // use Rift\Configurators\AppTenantConfigurator;
-// $result = AppTenantConfigurator::forTenant('982')->configure();
+
+// $result = AppTenantConfigurator::forTenant('100')->configure();
 
 // Системные репозитории
 
@@ -32,11 +41,11 @@ $dotenv->safeLoad();
 
 //     // Запрос к репозиторию
 
-//     // $result = $tenantsRepository->createTenant([
-//     //     'name' => 'huila',
-//     //     'email' => 'testi@gmail.com',
-//     //     'password' => 123456   
-//     // ]);
+//     $result = $tenantsRepository->createTenant([
+//         'name' => 'test',
+//         'email' => 'createTest@gmail.com',
+//         'password' => 123456   
+//     ]);
 
 //     // $result = $tenantsRepository->selectAll(10, 0);
 
@@ -45,17 +54,27 @@ $dotenv->safeLoad();
 
 
 // Репозитории тенанта
-use Rift\Repositories\Tenant\Router;
-$tenantRouter = Router::forTenant('982');
-$usersRepoRequest = $tenantRouter->getRepository('users.repo');
-if ($usersRepoRequest->isSuccess()) {
-    $usersRepo = $usersRepoRequest->result;
-    $result = $usersRepo->createUser([
-        'name' => 'hui',
-        'password' => '123456',
-        'role' => 'admin'
-    ]);
-}
+
+// use Rift\Repositories\Tenant\Router;
+// $tenantRouter = Router::forTenant('982');
+// $usersRepoRequest = $tenantRouter->getRepository('users.repo');
+// if ($usersRepoRequest->isSuccess()) {
+//     $usersRepo = $usersRepoRequest->result;
+//     $result = $usersRepo->createUser([
+//         'name' => 'Пидрила',
+//         'password' => '123456',
+//         'role' => 'worker'
+//     ]);
+// }
+
+// Crypto
+// use Rift\Core\Crypto\CryptoFactory;
+// $cryptoConfig = require 'config/crypto.php';
+// $cryptoFactory = new CryptoFactory($cryptoConfig);
+
+// $result = $cryptoFactory->getJwt()->encode([
+//     'tenantId' => '982'
+// ], 3600);
 
 echo "<pre>";
 var_dump($result);

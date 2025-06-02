@@ -28,4 +28,10 @@ class ResponseDTO
         return $this;
     }
 
+    public function isSuccess() {
+        if ($this->code === 200) {
+            return true;
+        }
+        return false;
+    }
 }

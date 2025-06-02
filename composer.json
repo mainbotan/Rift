@@ -16,7 +16,7 @@
   "require": {
     "php": "^8.2",
     "vlucas/phpdotenv": "^5.5",
-    "firebase/php-jwt": "^6.8",    
+    "firebase/php-jwt": "^6.8",
     "ext-openssl": "*",
     "ext-sodium": "*",
     "paragonie/sodium_compat": "^2.0",

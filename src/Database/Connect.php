@@ -17,9 +17,14 @@ class Connect extends Response
 
         $dsn = match ($driver) {
             'mysql' => "mysql:host={$_ENV['DB_HOST']};port={$_ENV['DB_PORT']};dbname={$_ENV['DB_NAME']}",
-            'pgsql' => "pgsql:host={$_ENV['DB_HOST']};port={$_ENV['DB_PORT']};dbname={$_ENV['DB_NAME']}",
-            default => null,
+            'pgsql' => "pgsql:host={$_ENV['DB_HOST']};port={$_ENV['DB_PORT']};dbname={$_ENV['DB_NAME']}"
         };
+
+        if (!$dsn) {
+            return self::error(500, "Unsupported DB driver: {$driver}", [
+                'driver' => $driver,
+            ]);
+        }
 
         try {
             $pdo = new PDO($dsn, $_ENV['DB_USER'], $_ENV['DB_PASSWORD'], [

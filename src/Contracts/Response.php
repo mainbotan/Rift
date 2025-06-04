@@ -46,7 +46,7 @@ class Response
 
     public static function error(
         int $code = self::HTTP_INTERNAL_SERVER_ERROR,
-        string $message,
+        ?string $message = 'unknown error',
         ?array $debug = null
     ): ResponseDTO {
         return self::response(

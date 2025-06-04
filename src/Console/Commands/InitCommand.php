@@ -9,6 +9,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 class InitCommand extends Command
 {
     protected static $defaultName = 'init';
+
     public function __construct()
     {
         parent::__construct('init');
@@ -21,7 +22,7 @@ class InitCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $binaryPath = realpath(__DIR__ . '/../../../bin/rift'); // путь к ядру core/bin/rift
+        $binaryPath = realpath(__DIR__ . '/../../../bin/rift');
         $linkPath = '/usr/local/bin/rift';
 
         if (!$binaryPath || !file_exists($binaryPath)) {
@@ -30,24 +31,24 @@ class InitCommand extends Command
         }
 
         if (!is_executable($binaryPath)) {
-            chmod($binaryPath, 0755);
+            @chmod($binaryPath, 0755);
             $output->writeln("<info>Made bin/rift executable.</info>");
         }
 
-        if (file_exists($linkPath) || is_link($linkPath)) {
-            unlink($linkPath);
+        if (@is_link($linkPath) || @file_exists($linkPath)) {
+            @unlink($linkPath);
             $output->writeln("<comment>Removed existing /usr/local/bin/rift.</comment>");
         }
 
-        try {
-            symlink($binaryPath, $linkPath);
-            $output->writeln("<info>rift CLI installed globally. You can now run `rift` from anywhere.</info>");
-        } catch (\Exception $e) {
-            $output->writeln("<error>Failed to link rift globally: {$e->getMessage()}</error>");
+        $success = @symlink($binaryPath, $linkPath);
+        
+        if (!$success) {
+            $error = error_get_last();
+            $output->writeln("<error>Failed to link rift globally: {$error['message']}</error>");
             return Command::FAILURE;
         }
 
+        $output->writeln("<info>rift CLI installed globally. You can now run `rift` from anywhere.</info>");
         return Command::SUCCESS;
     }
-
 }

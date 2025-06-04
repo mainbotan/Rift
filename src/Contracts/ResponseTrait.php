@@ -12,6 +12,7 @@ trait ResponseTrait {
     const HTTP_FORBIDDEN = 403;
     const HTTP_NOT_FOUND = 404;
     const HTTP_METHOD_NOT_ALLOWED = 405;
+    const HTTP_CONFLICT = 405;
     const HTTP_UNPROCESSABLE_ENTITY = 422;
     const HTTP_TOO_MANY_REQUESTS = 429;
     const HTTP_INTERNAL_SERVER_ERROR = 500;

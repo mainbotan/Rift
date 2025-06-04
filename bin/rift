@@ -1,7 +1,25 @@
 #!/usr/bin/env php
 <?php
 
-require __DIR__ . '/../vendor/autoload.php';
+// Определяем корень проекта
+$projectRoot = $_ENV['APP_ROOT'] ?: dirname(__DIR__, 3);
+
+$autoloadCandidates = [
+    $projectRoot . '/vendor/autoload.php',  // Основной вариант
+    __DIR__ . '/../../../vendor/autoload.php', // Для разработки ядра
+    getcwd() . '/vendor/autoload.php',      // Резервный вариант
+];
+
+foreach ($autoloadCandidates as $autoload) {
+    if (file_exists($autoload)) {
+        require_once $autoload;
+        break;
+    }
+}
+
+if (!class_exists('Rift\Core\Console\Kernel')) {
+    die("Error: Rift kernel not found. Check autoload paths.\n");
+}
 
 use Rift\Core\Console\Kernel;
 

@@ -3,15 +3,15 @@
 namespace Rift\Core\Configs;
 
 use Exception;
-use Rift\Core\Contracts\Response;
-use Rift\Core\Contracts\ResponseDTO;
+use Rift\Core\Contracts\Operation;
+use Rift\Core\Contracts\OperationOutcome;
 
-class ConfigReader extends Response
+class ConfigReader extends Operation
 {
     private static array $cache = [];
     private static array $resolvedEnv = [];
 
-    public static function get(string $key, mixed $default = null): ResponseDTO
+    public static function get(string $key, mixed $default = null): OperationOutcome
     {
         $segments = explode('.', $key);
         $configName = array_shift($segments);

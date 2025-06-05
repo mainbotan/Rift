@@ -3,10 +3,10 @@
 namespace Rift\Core\Navigation;
 
 // Контракт ответа
-use Rift\Core\Contracts\Response;
-use Rift\Core\Contracts\ResponseDTO;
+use Rift\Core\Contracts\Operation;
+use Rift\Core\Contracts\OperationOutcome;
 
-class Router extends Response {
+class Router extends Operation {
     public function __construct(
         public array $routes
     ){ }
@@ -18,7 +18,7 @@ class Router extends Response {
         string $method,
         string $uri,
         ?array $data
-    ): ResponseDTO {
+    ): OperationOutcome {
         // Отрезаем query string от пути
         $parsedUri = parse_url($uri);
         $path = $parsedUri['path'] ?? '/';
@@ -83,7 +83,7 @@ class Router extends Response {
     private function checkMiddlewares(
         array|null $middlewares,
         array|null $params
-    ): ResponseDTO {
+    ): OperationOutcome {
         if (!is_array($middlewares) || empty($middlewares)) {
             return parent::response(null, self::HTTP_OK);
         }

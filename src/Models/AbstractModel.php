@@ -2,11 +2,11 @@
 
 namespace Rift\Core\Models;
 
-use Rift\Core\Contracts\Response;
-use Rift\Core\Contracts\ResponseDTO;
+use Rift\Core\Contracts\Operation;
+use Rift\Core\Contracts\OperationOutcome;
 use Rift\Core\Validators\Utils\SchemaValidator;
 
-abstract class AbstractModel extends Response
+abstract class AbstractModel extends Operation
 {
     abstract public static function getSchema(): array;
 
@@ -25,12 +25,12 @@ abstract class AbstractModel extends Response
         return strtolower((new \ReflectionClass(static::class))->getShortName());
     }
     
-    public static function validate(array $data): ResponseDTO
+    public static function validate(array $data): OperationOutcome
     {
         return SchemaValidator::validate(static::getSchema(), $data);
     }
     
-    public static function validateField(string $field, $value): ResponseDTO
+    public static function validateField(string $field, $value): OperationOutcome
     {
         $schema = static::getSchema();
         if (!isset($schema[$field])) {
@@ -130,7 +130,7 @@ abstract class AbstractModel extends Response
         return ($indexSql ?? '').$sql;
     }
     
-    public static function validateModel(): ResponseDTO
+    public static function validateModel(): OperationOutcome
     {
         foreach (static::getForeignKeys() as $fk) {
             if (empty($fk['reference_table'])) {

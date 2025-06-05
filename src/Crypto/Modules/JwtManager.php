@@ -1,12 +1,12 @@
 <?php
-namespace Rift\Core\Crypto;
+namespace Rift\Core\Crypto\Modules;
 
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
-use Rift\Core\Contracts\Response;
-use Rift\Core\Contracts\ResponseDTO;
+use Rift\Core\Contracts\Operation;
+use Rift\Core\Contracts\OperationOutcome;
 
-class JwtManager extends Response
+class JwtManager extends Operation
 {
     private string $secretKey;
     private string $algorithm;
@@ -28,7 +28,7 @@ class JwtManager extends Response
         $this->algorithm = $algorithm;
     }
 
-    public function encode(array $payload, ?int $ttl = null): ResponseDTO
+    public function encode(array $payload, ?int $ttl = null): OperationOutcome
     {
         try {
             $payload = array_merge($payload, [
@@ -43,7 +43,7 @@ class JwtManager extends Response
         }
     }
 
-    public function decode(string $token): ResponseDTO
+    public function decode(string $token): OperationOutcome
     {
         try {
             return self::success(
@@ -54,7 +54,7 @@ class JwtManager extends Response
         }
     }
 
-    public function validate(string $token): ResponseDTO
+    public function validate(string $token): OperationOutcome
     {
         try {
             $this->decode($token);

@@ -2,11 +2,11 @@
 
 namespace Rift\Core\Database\Configurators;
 
-use Rift\Core\Contracts\Response;
-use Rift\Core\Contracts\ResponseDTO;
+use Rift\Core\Contracts\Operation;
+use Rift\Core\Contracts\OperationOutcome;
 use Rift\Core\Database\Connect;
 
-abstract class TenantConfigurator extends Response
+abstract class TenantConfigurator extends Operation
 {
     protected static array $models = [];
     protected static string $tenantId;
@@ -17,7 +17,7 @@ abstract class TenantConfigurator extends Response
         return new static();
     }
 
-    public static function configure(): ResponseDTO
+    public static function configure(): OperationOutcome
     {
         if (static::$tenantId === 'system') {
             return self::error(self::HTTP_BAD_REQUEST, 'The "system" scheme is reserved by Rift');

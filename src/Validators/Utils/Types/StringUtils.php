@@ -2,9 +2,9 @@
 
 namespace Rift\Core\Validators\Utils\Types;
 
-use Rift\Core\Contracts\Response;
+use Rift\Core\Contracts\Operation;
 
-class StringUtils extends Response
+class StringUtils extends Operation
 {
     public static function checkLength(
         string $value,

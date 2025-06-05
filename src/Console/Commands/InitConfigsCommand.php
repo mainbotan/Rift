@@ -8,8 +8,8 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Rift\Core\Console\Utils\DirectoriesUtils;
 use Symfony\Component\Console\Input\InputOption;
 
-use Rift\Core\Contracts\Response;
-use Rift\Core\Contracts\ResponseDTO;
+use Rift\Core\Contracts\Operation;
+use Rift\Core\Contracts\OperationOutcome;
 
 class InitConfigsCommand extends Command
 {
@@ -71,7 +71,7 @@ class InitConfigsCommand extends Command
         if (!$copyResult->isSuccess()) {
             $output->writeln("<error>Failed to copy configs: {$copyResult->error}</error>");
             
-            if ($copyResult->code === Response::HTTP_CONFLICT) {
+            if ($copyResult->code === Operation::HTTP_CONFLICT) {
                 $output->writeln("<info>Use --force option to overwrite existing files</info>");
             }
             

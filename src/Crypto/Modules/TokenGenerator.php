@@ -1,10 +1,10 @@
 <?php
-namespace Rift\Core\Crypto;
+namespace Rift\Core\Crypto\Modules;
 
-use Rift\Core\Contracts\Response;
-use Rift\Core\Contracts\ResponseDTO;
+use Rift\Core\Contracts\Operation;
+use Rift\Core\Contracts\OperationOutcome;
 
-class TokenGenerator extends Response
+class TokenGenerator extends Operation
 {
     public function __construct(
         private int $csrfLength = 32,
@@ -25,7 +25,7 @@ class TokenGenerator extends Response
         }
     }
 
-    public function createCsrfToken(): ResponseDTO
+    public function createCsrfToken(): OperationOutcome
     {
         try {
             return self::success(bin2hex(random_bytes($this->csrfLength)));
@@ -38,7 +38,7 @@ class TokenGenerator extends Response
         }
     }
 
-    public function generateApiKey(): ResponseDTO
+    public function generateApiKey(): OperationOutcome
     {
         try {
             return self::success(bin2hex(random_bytes($this->apiKeyLength / 2)));

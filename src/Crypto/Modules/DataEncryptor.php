@@ -1,10 +1,10 @@
 <?php
-namespace Rift\Core\Crypto;
+namespace Rift\Core\Crypto\Modules;
 
-use Rift\Core\Contracts\Response;
-use Rift\Core\Contracts\ResponseDTO;
+use Rift\Core\Contracts\Operation;
+use Rift\Core\Contracts\OperationOutcome;
 
-class DataEncryptor extends Response
+class DataEncryptor extends Operation
 {
     public function __construct(
         private string $cipher = 'AES-256-CBC',
@@ -18,7 +18,7 @@ class DataEncryptor extends Response
         }
     }
 
-    public function encrypt(string $data, string $key): ResponseDTO
+    public function encrypt(string $data, string $key): OperationOutcome
     {
         if (strlen($key) < 32) {
             return self::error(
@@ -51,7 +51,7 @@ class DataEncryptor extends Response
         }
     }
 
-    public function decrypt(string $encrypted, string $key): ResponseDTO
+    public function decrypt(string $encrypted, string $key): OperationOutcome
     {
         try {
             $data = base64_decode($encrypted);

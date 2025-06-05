@@ -2,9 +2,9 @@
 
 namespace Rift\Core\Validators\Utils\Types;
 
-use Rift\Core\Contracts\Response;
+use Rift\Core\Contracts\Operation;
 
-class IntUtils extends Response
+class IntUtils extends Operation
 {
     public static function checkRange(
         int $value,

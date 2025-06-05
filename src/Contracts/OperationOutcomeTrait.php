@@ -2,7 +2,7 @@
 
 namespace Rift\Core\Contracts;
 
-trait ResponseTrait {
+trait OperationOutcomeTrait {
     const HTTP_OK = 200;
     const HTTP_CREATED = 201;
     const HTTP_ACCEPTED = 202;

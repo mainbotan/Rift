@@ -33,6 +33,8 @@ class InitSystemSchemaCommand extends Command
         if ($systemConfiguratorClassRequest->isSuccess()) {
             $systemConfiguratorClass = $systemConfiguratorClassRequest->result;
 
+            $output->writeln("<comment>the beginning of the deployment of the system scheme</comment>");
+
             $configurator = new $systemConfiguratorClass;
             $configuratorExecuteRequest = $configurator->configure();
 

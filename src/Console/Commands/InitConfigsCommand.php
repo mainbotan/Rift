@@ -6,8 +6,10 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Rift\Core\Console\Utils\DirectoriesUtils;
-use RuntimeException;
 use Symfony\Component\Console\Input\InputOption;
+
+use Rift\Core\Contracts\Response;
+use Rift\Core\Contracts\ResponseDTO;
 
 class InitConfigsCommand extends Command
 {
@@ -34,37 +36,49 @@ class InitConfigsCommand extends Command
         $force = $input->getOption('force');
         $projectRoot = getcwd();
         $projectConfigsDir = "{$projectRoot}/configs/";
-        $stubsConfigsDir = DirectoriesUtils::getStubsDir('configs');
 
-        if (!is_dir($stubsConfigsDir) || !is_readable($stubsConfigsDir)) {
-            $output->writeln("<error>Stubs directory is missing or unreadable</error>");
+        // Получаем директорию с шаблонами
+        $stubsResult = DirectoriesUtils::getStubsDir('configs');
+        if (!$stubsResult->isSuccess()) {
+            $output->writeln("<error>{$stubsResult->error}</error>");
             return Command::FAILURE;
         }
+        $stubsConfigsDir = $stubsResult->result;
 
+        // Проверяем/создаем целевую директорию
         if (is_dir($projectConfigsDir)) {
             if (!$force) {
                 $output->writeln("<comment>Config directory exists. Use --force to overwrite</comment>");
                 return Command::FAILURE;
             }
 
-            if (!is_writable($projectConfigsDir)) {
-                $output->writeln("<error>No write permissions for config directory</error>");
+            $cleanResult = DirectoriesUtils::cleanDirectory($projectConfigsDir);
+            if (!$cleanResult->isSuccess()) {
+                $output->writeln("<error>Failed to clean directory: {$cleanResult->error}</error>");
                 return Command::FAILURE;
             }
-
-            DirectoriesUtils::cleanDirectory($projectConfigsDir);
             $output->writeln("<info>Cleared existing configs</info>");
         } else {
-            @mkdir($projectConfigsDir, 0755, true);
+            $createResult = DirectoriesUtils::createDirectory($projectConfigsDir);
+            if (!$createResult->isSuccess()) {
+                $output->writeln("<error>Failed to create directory: {$createResult->error}</error>");
+                return Command::FAILURE;
+            }
         }
 
-        try {
-            DirectoriesUtils::copyDirectory($stubsConfigsDir, $projectConfigsDir);
-            $output->writeln("<info>Configs initialized successfully</info>");
-            return Command::SUCCESS;
-        } catch (\RuntimeException $e) {
-            $output->writeln("<error>Failed: {$e->getMessage()}</error>");
+        // Копируем файлы конфигурации
+        $copyResult = DirectoriesUtils::copyDirectory($stubsConfigsDir, $projectConfigsDir, $force);
+        if (!$copyResult->isSuccess()) {
+            $output->writeln("<error>Failed to copy configs: {$copyResult->error}</error>");
+            
+            if ($copyResult->code === Response::HTTP_CONFLICT) {
+                $output->writeln("<info>Use --force option to overwrite existing files</info>");
+            }
+            
             return Command::FAILURE;
         }
+
+        $output->writeln("<info>Configs initialized successfully</info>");
+        return Command::SUCCESS;
     }
 }

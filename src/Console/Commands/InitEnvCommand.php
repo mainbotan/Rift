@@ -6,8 +6,10 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Rift\Core\Console\Utils\DirectoriesUtils;
-use RuntimeException;
 use Symfony\Component\Console\Input\InputOption;
+
+use Rift\Core\Contracts\Response;
+use Rift\Core\Contracts\ResponseDTO;
 
 class InitEnvCommand extends Command
 {
@@ -33,38 +35,40 @@ class InitEnvCommand extends Command
     {
         $force = $input->getOption('force');
         $projectRoot = getcwd();
-        
-        try {
-            $stubsEnvDir = DirectoriesUtils::getStubsDir('env');
-        } catch (RuntimeException $e) {
-            $output->writeln("<error>{$e->getMessage()}</error>");
+        $targetEnvPath = $projectRoot . '/.env';
+
+        // Получаем директорию с шаблонами
+        $stubsResult = DirectoriesUtils::getStubsDir('env');
+        if (!$stubsResult->isSuccess()) {
+            $output->writeln("<error>{$stubsResult->error}</error>");
             return Command::FAILURE;
         }
+        
+        $stubsEnvFile = $stubsResult->result . '/.env';
 
-        $stubsEnvFile = $stubsEnvDir . '/.env';
-
-        if (!DirectoriesUtils::fileExists($stubsEnvFile)) {
+        // Проверяем существование шаблона
+        $fileExists = DirectoriesUtils::fileExists($stubsEnvFile);
+        if (!$fileExists->isSuccess() || !$fileExists->result) {
             $output->writeln("<error>.env file from stubs not found at: {$stubsEnvFile}</error>");
             return Command::FAILURE;
         }
 
-        $targetEnvPath = $projectRoot . '/.env';
-
-        try {
-            DirectoriesUtils::copyFile($stubsEnvFile, $targetEnvPath, $force);
-            $output->writeln("<info>.env file created successfully at: {$targetEnvPath}</info>");
-            return Command::SUCCESS;
-        } catch (RuntimeException $e) {
+        // Копируем файл
+        $copyResult = DirectoriesUtils::copyFile($stubsEnvFile, $targetEnvPath, $force);
+        if (!$copyResult->isSuccess()) {
             $output->writeln([
                 "<error>Failed to initialize .env file:</error>",
-                "<comment>{$e->getMessage()}</comment>"
+                "<comment>{$copyResult->error}</comment>"
             ]);
             
-            if (file_exists($targetEnvPath) && !$force) {
+            if ($copyResult->code === Response::HTTP_CONFLICT) {
                 $output->writeln("<info>Use --force option to overwrite existing file</info>");
             }
             
             return Command::FAILURE;
         }
+
+        $output->writeln("<info>.env file created successfully at: {$targetEnvPath}</info>");
+        return Command::SUCCESS;
     }
 }

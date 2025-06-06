@@ -5,10 +5,10 @@ namespace Rift\Core\Repositories;
 use PDO;
 use PDOStatement;
 use PDOException;
-use Rift\Core\Contracts\Response;
-use Rift\Core\Contracts\ResponseDTO;
+use Rift\Core\Contracts\Operation;
+use Rift\Core\Contracts\OperationOutcome;
 
-abstract class AbstractRepository extends Response
+abstract class AbstractRepository extends Operation
 {
     public function __construct(
         protected PDO $pdo,
@@ -18,39 +18,39 @@ abstract class AbstractRepository extends Response
     /**
      * Универсальный метод выполнения запросов
      */
-    protected function executeQuery(PDOStatement $stmt): ResponseDTO
+    protected function executeQuery(PDOStatement $stmt): OperationOutcome
     {
         try {
             $stmt->execute();
             
-            return $this->determineResponse($stmt);
+            return $this->determineOperation($stmt);
             
         } catch (PDOException $e) {
-            return $this->prepareErrorResponse($stmt, $e);
+            return $this->prepareErrorOperation($stmt, $e);
         }
     }
 
     /**
      * Определяет тип ответа на основе выполненного запроса
      */
-    private function determineResponse(PDOStatement $stmt): ResponseDTO
+    private function determineOperation(PDOStatement $stmt): OperationOutcome
     {
         $sqlType = strtoupper(strtok(trim($stmt->queryString), ' '));
         
         return match($sqlType) {
-            'SELECT' => $this->prepareSelectResponse($stmt),
-            'INSERT' => $this->prepareInsertResponse($stmt),
-            'UPDATE', 'DELETE' => $this->prepareModificationResponse($stmt),
-            default => $this->prepareGenericResponse($stmt)
+            'SELECT' => $this->prepareSelectOperation($stmt),
+            'INSERT' => $this->prepareInsertOperation($stmt),
+            'UPDATE', 'DELETE' => $this->prepareModificationOperation($stmt),
+            default => $this->prepareGenericOperation($stmt)
         };
     }
 
-    private function prepareSelectResponse(PDOStatement $stmt): ResponseDTO
+    private function prepareSelectOperation(PDOStatement $stmt): OperationOutcome
     {
         return self::success($stmt->fetchAll(PDO::FETCH_ASSOC));
     }
 
-    private function prepareInsertResponse(PDOStatement $stmt): ResponseDTO
+    private function prepareInsertOperation(PDOStatement $stmt): OperationOutcome
     {
         return self::success([
             'insert_id' => $this->pdo->lastInsertId(),
@@ -58,14 +58,14 @@ abstract class AbstractRepository extends Response
         ]);
     }
 
-    private function prepareModificationResponse(PDOStatement $stmt): ResponseDTO
+    private function prepareModificationOperation(PDOStatement $stmt): OperationOutcome
     {
         return self::success([
             'affected_rows' => $stmt->rowCount()
         ]);
     }
 
-    private function prepareGenericResponse(PDOStatement $stmt): ResponseDTO
+    private function prepareGenericOperation(PDOStatement $stmt): OperationOutcome
     {
         return self::success([
             'executed' => true,
@@ -73,7 +73,7 @@ abstract class AbstractRepository extends Response
         ]);
     }
 
-    private function prepareErrorResponse(PDOStatement $stmt, PDOException $e): ResponseDTO
+    private function prepareErrorOperation(PDOStatement $stmt, PDOException $e): OperationOutcome
     {
         return self::error(
             self::HTTP_INTERNAL_SERVER_ERROR,

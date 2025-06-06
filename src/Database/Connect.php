@@ -3,23 +3,28 @@
 namespace Rift\Core\Database;
 
 use PDO;
-use Rift\Core\Contracts\Response;
-use Rift\Core\Contracts\ResponseDTO;
+use Rift\Core\Contracts\Operation;
+use Rift\Core\Contracts\OperationOutcome;
 
-class Connect extends Response
+class Connect extends Operation
 {
     /**
      * Развёртывание схем
      */
-    public static function adminPdo(): ResponseDTO
+    public static function adminPdo(): OperationOutcome
     {
         $driver = $_ENV['DB_DRIVER'] ?? 'pgsql';
 
         $dsn = match ($driver) {
             'mysql' => "mysql:host={$_ENV['DB_HOST']};port={$_ENV['DB_PORT']};dbname={$_ENV['DB_NAME']}",
-            'pgsql' => "pgsql:host={$_ENV['DB_HOST']};port={$_ENV['DB_PORT']};dbname={$_ENV['DB_NAME']}",
-            default => null,
+            'pgsql' => "pgsql:host={$_ENV['DB_HOST']};port={$_ENV['DB_PORT']};dbname={$_ENV['DB_NAME']}"
         };
+
+        if (!$dsn) {
+            return self::error(500, "Unsupported DB driver: {$driver}", [
+                'driver' => $driver,
+            ]);
+        }
 
         try {
             $pdo = new PDO($dsn, $_ENV['DB_USER'], $_ENV['DB_PASSWORD'], [
@@ -38,7 +43,7 @@ class Connect extends Response
     /**
      * Подключение к системной схеме
      */
-    public static function systemPdo(): ResponseDTO
+    public static function systemPdo(): OperationOutcome
     {
         return self::getPdoForSchema('system');
     }
@@ -46,7 +51,7 @@ class Connect extends Response
     /**
      * Подключение к конкретной схеме
      */
-    public static function getPdoForSchema(string $schema): ResponseDTO
+    public static function getPdoForSchema(string $schema): OperationOutcome
     {
         $driver = $_ENV['DB_DRIVER'] ?? 'pgsql';
         $host = $_ENV['DB_HOST'] ?? 'localhost';

@@ -2,10 +2,10 @@
 
 namespace Rift\Core\UseCases;
 
-use Rift\Core\Contracts\ResponseDTO;
+use Rift\Core\Contracts\OperationOutcome;
 
 // Гарантирует контракт у всех юз кейсов
 
 interface UseCaseInterface {
-    public function execute(array $data): ResponseDTO;
+    public function execute(array $data): OperationOutcome;
 }

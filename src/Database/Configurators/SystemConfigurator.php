@@ -2,15 +2,15 @@
 
 namespace Rift\Core\Database\Configurators;
 
-use Rift\Core\Contracts\Response;
-use Rift\Core\Contracts\ResponseDTO;
+use Rift\Core\Contracts\Operation;
+use Rift\Core\Contracts\OperationOutcome;
 use Rift\Core\Database\Connect;
 
-abstract class SystemConfigurator extends Response
+abstract class SystemConfigurator extends Operation
 {
     protected static array $models = [];
 
-    public static function configure(): ResponseDTO
+    public static function configure(): OperationOutcome
     {
         $schema = 'system'; // универсально
 

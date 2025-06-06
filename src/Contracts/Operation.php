@@ -2,9 +2,9 @@
 
 namespace Rift\Core\Contracts;
 
-class Response
+class Operation
 {
-    use ResponseTrait;
+    use OperationOutcomeTrait;
 
     /**
      * Success response contract
@@ -18,8 +18,8 @@ class Response
         int $code = self::HTTP_OK,
         ?string $error = null,
         ?array $meta = null
-    ): ResponseDTO {
-        return new ResponseDTO(
+    ): OperationOutcome {
+        return new OperationOutcome(
             code: $code,
             result: $result,
             error: $error,
@@ -34,7 +34,7 @@ class Response
         mixed $result,
         ?array $metrics = null,
         ?array $debug = null
-    ): ResponseDTO {
+    ): OperationOutcome {
         return self::response(
             result: $result,
             meta: [
@@ -46,9 +46,9 @@ class Response
 
     public static function error(
         int $code = self::HTTP_INTERNAL_SERVER_ERROR,
-        string $message,
+        ?string $message = 'unknown error',
         ?array $debug = null
-    ): ResponseDTO {
+    ): OperationOutcome {
         return self::response(
             result: null,
             code: $code,

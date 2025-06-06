@@ -3,32 +3,32 @@ namespace Rift\Core\Repositories;
 
 use PDO;
 use PDOException;
-use Rift\Core\Contracts\Response;
-use Rift\Core\Contracts\ResponseDTO;
+use Rift\Core\Contracts\Operation;
+use Rift\Core\Contracts\OperationOutcome;
 use Rift\Core\Database\Connect;
 
-abstract class AbstractRouter extends Response
+abstract class AbstractRouter extends Operation
 {
     private array $connections = [];
     protected array $repositories = [];
     protected string $schema;
     
-    public function getRepository(string $key): ResponseDTO
+    public function getRepository(string $key): OperationOutcome
     {
         if (!isset($this->repositories[$key])) {
             return self::error(self::HTTP_NOT_FOUND, "Repository {$key} not found");
         }
 
-        $pdoResponse = $this->getConnection();
-        if ($pdoResponse->code !== self::HTTP_OK) {
-            return $pdoResponse;
+        $pdoOperation = $this->getConnection();
+        if ($pdoOperation->code !== self::HTTP_OK) {
+            return $pdoOperation;
         }
 
         $config = $this->repositories[$key];
-        return self::success(new $config['class']($pdoResponse->result, new($config['model'])));
+        return self::success(new $config['class']($pdoOperation->result, new($config['model'])));
     }
 
-    private function getConnection(): ResponseDTO
+    private function getConnection(): OperationOutcome
     {
         // Проверяем живое ли соединение
         if (isset($this->connections[$this->schema])) {

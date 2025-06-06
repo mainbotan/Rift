@@ -2,14 +2,14 @@
 
 namespace Rift\Core\Validators\Utils;
 
-use Rift\Core\Contracts\Response;
-use Rift\Core\Contracts\ResponseDTO;
+use Rift\Core\Contracts\Operation;
+use Rift\Core\Contracts\OperationOutcome;
 use Rift\Core\Validators\Utils\Types\IntUtils;
 use Rift\Core\Validators\Utils\Types\StringUtils;
 
-class SchemaValidator extends Response
+class SchemaValidator extends Operation
 {
-    public static function validate(array $schema, array $data): ResponseDTO
+    public static function validate(array $schema, array $data): OperationOutcome
     {
         foreach ($schema as $field => $rules) {
             $value = $data[$field] ?? ($rules['default'] ?? null);
@@ -90,7 +90,7 @@ class SchemaValidator extends Response
             // Кастомный валидатор
             if (isset($rules['validate']) && is_callable($rules['validate'])) {
                 $customResult = $rules['validate']($value, $data);
-                if ($customResult instanceof ResponseDTO && $customResult->code !== self::HTTP_OK) {
+                if ($customResult instanceof OperationOutcome && $customResult->code !== self::HTTP_OK) {
                     return $customResult;
                 } elseif ($customResult === false) {
                     return self::error(self::HTTP_BAD_REQUEST, $rules['message'] ?? "$field failed custom validation");

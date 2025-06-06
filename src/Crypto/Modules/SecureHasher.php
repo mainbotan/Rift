@@ -1,11 +1,11 @@
 <?php
 
-namespace Rift\Core\Crypto;
+namespace Rift\Core\Crypto\Modules;
 
-use Rift\Core\Contracts\Response;
-use Rift\Core\Contracts\ResponseDTO;
+use Rift\Core\Contracts\Operation;
+use Rift\Core\Contracts\OperationOutcome;
 
-class SecureHasher extends Response
+class SecureHasher extends Operation
 {
     public function __construct(
         private string|int $algorithm = PASSWORD_ARGON2ID,
@@ -19,7 +19,7 @@ class SecureHasher extends Response
         }
     }
 
-    public function hash(string $password): ResponseDTO
+    public function hash(string $password): OperationOutcome
     {
         $hash = password_hash($password, $this->algorithm, $this->options);
         

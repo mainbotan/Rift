@@ -1,8 +1,10 @@
 #!/usr/bin/env php
 <?php
+declare(strict_types=1);
 
 // Определяем корень проекта
-$projectRoot = $_ENV['APP_ROOT'] ?: dirname(__DIR__, 3);
+$root = isset($_ENV['APP_ROOT']) ?: null;
+$projectRoot = $root ?: dirname(__DIR__, 3);
 
 $autoloadCandidates = [
     $projectRoot . '/vendor/autoload.php',  // Основной вариант

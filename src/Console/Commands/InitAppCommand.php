@@ -12,9 +12,9 @@ use Symfony\Component\Console\Input\InputOption;
 use Rift\Core\Contracts\Operation;
 use Rift\Core\Contracts\OperationOutcome;
 
-class InitConfigsCommand extends Command
+class InitAppCommand extends Command
 {
-    protected static $defaultName = 'init:configs';
+    protected static $defaultName = 'init:app';
 
     public function __construct()
     {
@@ -23,30 +23,33 @@ class InitConfigsCommand extends Command
 
     protected function configure()
     {
-        $this->setDescription('Initializes Rift configuration files')
+        $this->setDescription('Initializes new application')
             ->addOption(
                 'force',
                 'f',
                 InputOption::VALUE_NONE,
-                'Overwrite existing config files'
+                'Overwrite existing app files'
             );
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $force = $input->getOption('force');
-        $projectRoot = getcwd();
-        $projectConfigsDir = "{$projectRoot}/configs/";
-        
-        $stubsDir = dirname(__DIR__, 3) . StubsUtils::$stubsAppDir . '/configs';
+        $result = StubsUtils::initProjectStructure(
+            targetRoot: getcwd(),
+            overwrite: $input->getOption('force')
+        );
 
-        $copyRequest = StubsUtils::copyStubDirectory($stubsDir, $projectConfigsDir, $force);
-        if (!$copyRequest->isSuccess()) {
-            $output->writeln("<error>{$copyRequest->code}: {$copyRequest->error}</error>");
+        if (!$result->isSuccess()) {
+            foreach ($result->result['errors'] ?? [] as $error) {
+                $output->writeln("<error>{$error}</error>");
+            }
             return Command::FAILURE;
         }
 
-        $output->writeln("<info>Configs initialized successfully</info>");
+        foreach ($result->result['created'] ?? [] as $file) {
+            $output->writeln("<info>Created: {$file}</info>");
+        }
+        $output->writeln("<info>New app initialized successfully</info>");
         return Command::SUCCESS;
     }
 }

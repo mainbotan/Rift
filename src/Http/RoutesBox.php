@@ -10,7 +10,7 @@ class RoutesBox extends Operation {
     const GET_METHOD = 'GET';
     const PUT_METHOD = 'PUT';
     const PATCH_METHOD = 'PATCH';
-    const DELETE_METHOD = "DELETE";
+    const DELETE_METHOD = 'DELETE';
 
     public array $routes = [];
 

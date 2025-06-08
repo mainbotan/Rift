@@ -5,6 +5,7 @@ namespace Rift\Core\Http;
 // Контракт ответа
 
 use Exception;
+use Rift\Core\Containers\DI;
 use Rift\Core\Http\Request;
 use Rift\Core\Http\RoutesBox;
 use Rift\Core\Contracts\Operation;
@@ -12,10 +13,10 @@ use Rift\Core\Contracts\OperationOutcome;
 
 class Router extends Operation {
     public function __construct(
-        private array $routes
+        private array $routes, private DI $DI
     ){ }
-    public static function fromRoutesBox(RoutesBox $routesBox) {
-        return new static($routesBox->getRoutes());
+    public static function fromRoutesBox(RoutesBox $routesBox, DI $DI) {
+        return new static($routesBox->getRoutes(), $DI);
     }
 
     /**
@@ -58,7 +59,7 @@ class Router extends Operation {
                     return self::error(self::HTTP_INTERNAL_SERVER_ERROR, 'Path handler not found');
                 }
                 
-                $handler = new $routeHandler;
+                $handler = new $routeHandler($this->DI); // DI injection
                 try {
                     return $handler->execute($payloadData);
                 } catch (Exception $e) {

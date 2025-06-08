@@ -12,7 +12,7 @@ abstract class AbstractRepository extends Operation
 {
     public function __construct(
         protected PDO $pdo,
-        protected object $model
+        public object $model
     ) {}
 
     /**

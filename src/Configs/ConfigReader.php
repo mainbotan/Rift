@@ -1,5 +1,15 @@
 <?php
 
+/*
+ * |--------------------------------------------------------------------------
+ * |
+ * This file is a component of the Rift Miniframework core <v 1.0.0>
+ * |
+ * Reading configuration files.
+ * |
+ * |--------------------------------------------------------------------------
+ */
+
 namespace Rift\Core\Configs;
 
 use Exception;

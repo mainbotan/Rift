@@ -1,8 +1,18 @@
 <?php
 
-namespace Rift\Core\Http;
+/*
+ * |--------------------------------------------------------------------------
+ * |
+ * This file is a component of the Rift Miniframework core <v 1.0.0>
+ * |
+ * Processing an incoming Request object, 
+ * obtaining a path based on the path configuration, 
+ * calling middleware, and requesting a target route handler.
+ * |
+ * |--------------------------------------------------------------------------
+ */
 
-// Контракт ответа
+namespace Rift\Core\Http;
 
 use Exception;
 use Rift\Core\Containers\DI;

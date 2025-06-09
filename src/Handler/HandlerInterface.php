@@ -5,16 +5,16 @@
  * |
  * This file is a component of the Rift Miniframework core <v 1.0.0>
  * |
- * The validator interface.
+ * Interface for the action handler. 
+ * The universal input point for processing the request.
  * |
  * |--------------------------------------------------------------------------
  */
 
-
-namespace Rift\Core\Validators;
+namespace Rift\Core\Handler;
 
 use Rift\Core\Contracts\OperationOutcome;
 
-interface ValidatorInterface {
+interface HandlerInterface {
     public function execute(array $data): OperationOutcome;
 }

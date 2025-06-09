@@ -1,5 +1,15 @@
 <?php
 
+/*
+ * |--------------------------------------------------------------------------
+ * |
+ * This file is a component of the Rift Miniframework core <v 1.0.0>
+ * |
+ * Response code statuses.
+ * |
+ * |--------------------------------------------------------------------------
+ */
+
 namespace Rift\Core\Contracts;
 
 trait OperationOutcomeTrait {

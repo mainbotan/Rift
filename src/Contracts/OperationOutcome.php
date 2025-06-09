@@ -1,5 +1,15 @@
 <?php
 
+/*
+ * |--------------------------------------------------------------------------
+ * |
+ * This file is a component of the Rift Miniframework core <v 1.0.0>
+ * |
+ * The OperationOucome object + methods for processing it.
+ * |
+ * |--------------------------------------------------------------------------
+ */
+
 namespace Rift\Core\Contracts;
 
 class OperationOutcome

@@ -1,5 +1,16 @@
 <?php
 
+/*
+ * |--------------------------------------------------------------------------
+ * |
+ * This file is a component of the Rift Miniframework core <v 1.0.0>
+ * |
+ * Path configurator. Initial registration of routes. 
+ * [in a production environment, use pre-prepared configurations]
+ * |
+ * |--------------------------------------------------------------------------
+ */
+
 namespace Rift\Core\Http;
 
 use Rift\Core\Contracts\Operation;

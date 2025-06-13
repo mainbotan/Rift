@@ -1,5 +1,16 @@
 <?php
 
+/*
+ * |--------------------------------------------------------------------------
+ * |
+ * This file is a component of the Rift Miniframework core <v 1.0.0>
+ * |
+ * Initialization of the tenant scheme.
+ * |
+ * |--------------------------------------------------------------------------
+ */
+
+
 namespace Rift\Core\Database\Configurators;
 
 use Rift\Core\Contracts\Operation;

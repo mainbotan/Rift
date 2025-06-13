@@ -1,5 +1,15 @@
 <?php
 
+/*
+ * |--------------------------------------------------------------------------
+ * |
+ * This file is a component of the Rift Miniframework core <v 1.0.0>
+ * |
+ * Initialization of the request object. PSR-7 compatibility.
+ * |
+ * |--------------------------------------------------------------------------
+ */
+
 namespace Rift\Core\Http;
 
 use Nyholm\Psr7\Factory\Psr17Factory;
@@ -22,7 +32,6 @@ class Request
 
     private function initializeParsedData(): void
     {
-        // Парсинг тела запроса
         try {
             $contentType = $this->getHeader('Content-Type') ?? '';
             $bodyContents = (string)$this->psrRequest->getBody();
@@ -131,9 +140,11 @@ class Request
             'files' => $this->getFiles()
         ];
     }
+
     public function isJson(): bool {
         return str_contains($this->getHeader('Content-Type') ?? '', 'application/json');
     }
+
     public function getClientIp(): string {
         return $this->psrRequest->getServerParams()['REMOTE_ADDR'] ?? '';
     }

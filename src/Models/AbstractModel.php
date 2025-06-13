@@ -1,5 +1,15 @@
 <?php
 
+/*
+ * |--------------------------------------------------------------------------
+ * |
+ * This file is a component of the Rift Miniframework core <v 1.0.0>
+ * |
+ * An abstract model of an entity + methods for processing it.
+ * |
+ * |--------------------------------------------------------------------------
+ */
+
 namespace Rift\Core\Models;
 
 use Rift\Core\Contracts\Operation;

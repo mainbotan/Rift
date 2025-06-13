@@ -1,5 +1,15 @@
 <?php
 
+/*
+ * |--------------------------------------------------------------------------
+ * |
+ * This file is a component of the Rift Miniframework core <v 1.0.0>
+ * |
+ * An auxiliary Operation class that can be used to simply create an OperationOutcome object.
+ * |
+ * |--------------------------------------------------------------------------
+ */
+
 namespace Rift\Core\Contracts;
 
 class Operation

@@ -1,5 +1,15 @@
 <?php
 
+/*
+ * |--------------------------------------------------------------------------
+ * |
+ * This file is a component of the Rift Miniframework core <v 1.0.0>
+ * |
+ * Validation of complex schemes.
+ * |
+ * |--------------------------------------------------------------------------
+ */
+
 namespace Rift\Core\Validators\Utils;
 
 use Rift\Core\Contracts\Operation;

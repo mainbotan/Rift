@@ -1,92 +1,103 @@
 <?php
 
-/*
- * |--------------------------------------------------------------------------
- * |
- * This file is a component of the Rift Miniframework core <v 1.0.0>
- * |
- * Processing an incoming Request object, 
- * obtaining a path based on the path configuration, 
- * calling middleware, and requesting a target route handler.
- * |
- * |--------------------------------------------------------------------------
- */
-
 namespace Rift\Core\Http;
 
-use Exception;
-use Rift\Core\Containers\DI;
+use DI\Container;
 use Rift\Core\Http\Request;
 use Rift\Core\Http\RoutesBox;
 use Rift\Core\Contracts\Operation;
 use Rift\Core\Contracts\OperationOutcome;
 
-class Router extends Operation {
+class Router extends Operation 
+{
+    private array $compiledRoutes = [];
+    private array $routes = [];
+    
     public function __construct(
-        private array $routes, private DI $DI
-    ){ }
-    public static function fromRoutesBox(RoutesBox $routesBox, DI $DI) {
-        return new static($routesBox->getRoutes(), $DI);
+        private RoutesBox $routesBox, 
+        private Container $container
+    ) {
+        $this->routes = $routesBox->getRoutes();
+        $this->compileRoutes();
     }
 
-    /**
-     * Обработка входящего запроса
-     */
-    public function execute(Request $request): OperationOutcome {
+    public function execute(Request $request): OperationOutcome
+    {
         $path = $request->getPath();
-        $method = $request->getMethod();
-        $getParams = $request->getQueryParams();
-        $data = $request->getBody();
-
-        foreach ($this->routes as $route) {
-            if (strtoupper($route['method']) !== strtoupper($method)) {
+        $method = strtoupper($request->getMethod());
+        
+        foreach ($this->compiledRoutes as $route) {
+            if ($route['method'] !== $method) {
                 continue;
             }
 
-            [$regex, $paramNames] = $this->parseRoute($route['path']);
-
-
-            if (preg_match($regex, $path, $matches)) {
-                $pathParams = [];
-
-                foreach ($paramNames as $name) {
-                    $pathParams[$name] = $matches[$name] ?? null;
-                }
-
-                // Объединяем параметры пути и query
-                $payloadData = array_merge($getParams, $pathParams, $data);
-                
-                $routeMiddlewares = $route['middlewares'];
-                if (!empty($routeMiddlewares)) {
-                    $middlewaresResult = $this->processMiddlewares($routeMiddlewares, $request);
-                    if (!$middlewaresResult->isSuccess()) {
-                        return $middlewaresResult;
-                    }
-                }
-
-                $routeHandler = $route['handler'];
-                if (empty($routeHandler)) {
-                    return self::error(self::HTTP_INTERNAL_SERVER_ERROR, 'Path handler not found');
-                }
-                
-                $handler = new $routeHandler($this->DI); // DI injection
-                try {
-                    return $handler->execute($payloadData);
-                } catch (Exception $e) {
-                    return self::error(self::HTTP_INTERNAL_SERVER_ERROR, "Invalid path handler: {$e->getMessage()}");
-                }
+            if (!preg_match($route['regex'], $path, $matches)) {
+                continue;
             }
+
+            $params = $this->extractRouteParams($route['paramNames'], $matches);
+            $payload = array_merge(
+                $request->getQueryParams(),
+                $params,
+                $request->getBody()
+            );
+
+            // Middleware processing
+            if (!empty($route['middlewares'])) {
+                $middlewareResult = $this->processMiddlewares($route['middlewares'], $request);
+                if (!$middlewareResult->isSuccess()) {
+                    return $middlewareResult;
+                }
+                $request = $middlewareResult->result ?? $request;
+            }
+
+            // Route handler execution
+            return $this->executeHandler($route['handler'], $payload);
         }
-        return parent::response(
-            null,
-            self::HTTP_NOT_FOUND,
-            'Path not found'
-        );
+
+        return self::error(self::HTTP_NOT_FOUND, 'Path not found');
     }
 
-    /**
-     * Обработка мидлваров
-     */
+    private function compileRoutes(): void
+    {
+        foreach ($this->routes as $route) {
+            [$regex, $paramNames] = $this->parseRoute($route['path']);
+            
+            $this->compiledRoutes[] = [
+                'method' => strtoupper($route['method']),
+                'path' => $route['path'],
+                'regex' => $regex,
+                'paramNames' => $paramNames,
+                'middlewares' => $route['middlewares'] ?? [],
+                'handler' => $route['handler']
+            ];
+        }
+    }
+
+    private function parseRoute(string $route): array
+    {
+        $paramNames = [];
+        $regex = preg_replace_callback(
+            '/{(\w+)}/',
+            function ($matches) use (&$paramNames) {
+                $paramNames[] = $matches[1];
+                return '(?P<'.$matches[1].'>[^/]+)';
+            },
+            $route
+        );
+
+        return ['#^'.$regex.'$#', $paramNames];
+    }
+
+    private function extractRouteParams(array $paramNames, array $matches): array
+    {
+        $params = [];
+        foreach ($paramNames as $name) {
+            $params[$name] = $matches[$name] ?? null;
+        }
+        return $params;
+    }
+
     private function processMiddlewares(array $middlewares, Request $request): OperationOutcome
     {
         foreach ($middlewares as $middleware) {
@@ -94,7 +105,7 @@ class Router extends Operation {
                 return self::error(500, "Middleware class {$middleware} not found");
             }
             
-            $result = (new $middleware)->execute($request);
+            $result = $this->container->get($middleware)->execute($request);
             if (!$result->isSuccess()) {
                 return $result;
             }
@@ -105,17 +116,21 @@ class Router extends Operation {
         return self::success($request);
     }
 
-    /**
-     * Преобразует шаблон маршрута в регулярное выражение
-     */
-    private function parseRoute(string $route): array
+    private function executeHandler(string $handler, array $payload): OperationOutcome
     {
-        $paramNames = [];
-        $regex = preg_replace_callback('/{(\w+)}/', function ($matches) use (&$paramNames) {
-            $paramNames[] = $matches[1];
-            return '(?P<' . $matches[1] . '>[^/]+)';
-        }, $route);
+        if (empty($handler)) {
+            return self::error(self::HTTP_INTERNAL_SERVER_ERROR, 'Path handler not found');
+        }
 
-        return ['#^' . $regex . '$#', $paramNames];
+        try {
+            $handlerInstance = $this->container->get($handler);
+            return $handlerInstance->execute($payload);
+        } catch (\Throwable $e) {
+            return self::error(
+                self::HTTP_INTERNAL_SERVER_ERROR, 
+                "Invalid path handler: {$e->getMessage()}",
+                ['debug' => ['trace' => $e->getTraceAsString()]]
+            );
+        }
     }
 }

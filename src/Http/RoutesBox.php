@@ -23,46 +23,64 @@ class RoutesBox extends Operation {
     const PATCH_METHOD = 'PATCH';
     const DELETE_METHOD = 'DELETE';
 
+    protected ?string $currentGroupPrefix = null;
+    protected array $currentGroupMiddlewares = [];
+
     public array $routes = [];
 
     public function getRoutes(): array {
         return $this->routes;
     }
 
-    protected function addRoute(
-        string $method, string $path, string $handler, array $middlewares
-    ) {
+    protected function addRoute(string $method, string $path, string $handler, array $middlewares) {
+        $fullPath = rtrim($this->currentGroupPrefix ?? '', '/') . '/' . ltrim($path, '/');
+        $fullMiddlewares = array_merge($this->currentGroupMiddlewares ?? [], $middlewares);
+
         $this->routes[] = [
             'method' => $method,
-            'path' => $path,
+            'path' => $fullPath,
             'handler' => $handler,
-            'middlewares' => $middlewares
+            'middlewares' => $fullMiddlewares
         ];
-    } 
-    public function group(string $prefix, callable $callback): self {
-        $groupBox = new RoutesBox();
-        $callback($groupBox);
-        
-        foreach ($groupBox->getRoutes() as $route) {
-            $this->addRoute($prefix . $route['path'], $route['method'], $route['handler'], $route['middlewares']);
-        }
-        
+    }
+
+    public function group(array $options, callable $callback): self {
+        $prefix = $options['prefix'] ?? '';
+        $middlewares = $options['middlewares'] ?? [];
+
+        $previousPrefix = $this->currentGroupPrefix ?? '';
+        $previousMiddlewares = $this->currentGroupMiddlewares ?? [];
+
+        // Обновляем префикс и middleware для вложенных групп
+        $this->currentGroupPrefix = $previousPrefix . $prefix;
+        $this->currentGroupMiddlewares = array_merge($previousMiddlewares, $middlewares);
+
+        $callback($this);
+
+        // Восстанавливаем предыдущие значения после выхода из группы
+        $this->currentGroupPrefix = $previousPrefix;
+        $this->currentGroupMiddlewares = $previousMiddlewares;
+
         return $this;
     }
-    
-    public function get(string $path, string $handlerClass, array $middlewaresClasses): void {
+    public function get(string $path, string $handlerClass, array $middlewaresClasses): self {
         $this->addRoute(self::GET_METHOD, $path, $handlerClass, $middlewaresClasses);
+        return $this;
     }
-    public function post(string $path, string $handlerClass, array $middlewaresClasses): void {
+    public function post(string $path, string $handlerClass, array $middlewaresClasses): self {
         $this->addRoute(self::POST_METHOD, $path, $handlerClass, $middlewaresClasses);
+        return $this;
     }
-    public function patch(string $path, string $handlerClass, array $middlewaresClasses): void {
+    public function patch(string $path, string $handlerClass, array $middlewaresClasses): self {
         $this->addRoute(self::PATCH_METHOD, $path, $handlerClass, $middlewaresClasses);
+        return $this;
     }
-    public function delete(string $path, string $handlerClass, array $middlewaresClasses): void {
+    public function delete(string $path, string $handlerClass, array $middlewaresClasses): self {
         $this->addRoute(self::DELETE_METHOD, $path, $handlerClass, $middlewaresClasses);
+        return $this;
     }
-    public function put(string $path, string $handlerClass, array $middlewaresClasses): void {
+    public function put(string $path, string $handlerClass, array $middlewaresClasses): self {
         $this->addRoute(self::PUT_METHOD, $path, $handlerClass, $middlewaresClasses);
+        return $this;
     }
 }

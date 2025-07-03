@@ -39,9 +39,13 @@ class OperationOutcome
         $this->meta['debug'][$key] = $value;
         return $this;
     }
+    public function getDebug(string $key): mixed
+    {
+        return $this->meta['debug'][$key] ?? null;
+    }
 
     public function isSuccess() {
-        if ($this->code === 200 or $this->code === 201) {
+        if ($this->code === 200 or $this->code === 201 or $this->code === 202) {
             return true;
         }
         return false;
@@ -133,9 +137,9 @@ class OperationOutcome
     ): string {
         $data = $transformer ? $transformer($this) : [
             'status' => $this->isSuccess() ? 'success' : 'error',
-            'data' => $this->result,
+            'result' => $this->result,
             'error' => $this->error,
-            'details' => $this->meta
+            'meta' => $this->meta
         ];
 
         return json_encode($data, $flags);

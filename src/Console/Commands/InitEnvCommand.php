@@ -8,8 +8,8 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Rift\Core\Console\Utils\DirectoriesUtils;
 use Symfony\Component\Console\Input\InputOption;
 
-use Rift\Core\Contracts\Operation;
-use Rift\Core\Contracts\OperationOutcome;
+use Rift\Core\DataBus\Operation;
+use Rift\Core\DataBus\OperationOutcome;
 
 class InitEnvCommand extends Command
 {

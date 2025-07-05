@@ -12,8 +12,8 @@
 
 namespace Rift\Core\Validators\Utils;
 
-use Rift\Core\Contracts\Operation;
-use Rift\Core\Contracts\OperationOutcome;
+use Rift\Core\DataBus\Operation;
+use Rift\Core\DataBus\OperationOutcome;
 use Rift\Core\Validators\Utils\Types\IntUtils;
 use Rift\Core\Validators\Utils\Types\StringUtils;
 

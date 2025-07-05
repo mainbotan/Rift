@@ -14,11 +14,12 @@ namespace Rift\Core\Http;
 
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7Server\ServerRequestCreator;
-use Rift\Core\Contracts\Operation;
-use Rift\Core\Contracts\OperationOutcome;
+use Rift\Core\DataBus\Operation;
+use Rift\Core\DataBus\OperationOutcome;
 use Psr\Http\Message\ServerRequestInterface;
+use Rift\Contracts\Http\RequestInterface;
 
-class Request
+class Request implements RequestInterface
 {
     private ServerRequestInterface $psrRequest;
     private array $parsedBody = [];

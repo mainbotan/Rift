@@ -2,8 +2,8 @@
 
 namespace Rift\Core\Console\Utils;
 
-use Rift\Core\Contracts\OperationOutcome;
-use Rift\Core\Contracts\Operation;
+use Rift\Core\DataBus\OperationOutcome;
+use Rift\Core\DataBus\Operation;
 
 class StubsUtils extends Operation
 {

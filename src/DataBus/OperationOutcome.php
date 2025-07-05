@@ -10,9 +10,9 @@
  * |--------------------------------------------------------------------------
  */
 
-namespace Rift\Core\Contracts;
+namespace Rift\Core\DataBus;
 
-class OperationOutcome
+final class OperationOutcome
 {
     use OperationOutcomeTrait;
 

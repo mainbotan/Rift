@@ -12,8 +12,8 @@
 
 namespace Rift\Core\Containers;
 
-use Rift\Core\Contracts\Operation;
-use Rift\Core\Contracts\OperationOutcome;
+use Rift\Core\DataBus\Operation;
+use Rift\Core\DataBus\OperationOutcome;
 
 class DI extends Operation {
     private array $relations = [];

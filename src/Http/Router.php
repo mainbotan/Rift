@@ -3,25 +3,26 @@
 namespace Rift\Core\Http;
 
 use DI\Container;
-use Rift\Core\Http\Request;
-use Rift\Core\Http\RoutesBox;
-use Rift\Core\Contracts\Operation;
-use Rift\Core\Contracts\OperationOutcome;
+use Rift\Contracts\Http\RequestInterface;
+use Rift\Contracts\Http\RouterInterface;
+use Rift\Contracts\Http\RoutesBoxInterface;
+use Rift\Core\DataBus\Operation;
+use Rift\Core\DataBus\OperationOutcome;
 
-class Router extends Operation 
+class Router extends Operation implements RouterInterface
 {
     private array $compiledRoutes = [];
     private array $routes = [];
     
     public function __construct(
-        private RoutesBox $routesBox, 
+        private RoutesBoxInterface $routesBox, 
         private Container $container
     ) {
         $this->routes = $routesBox->getRoutes();
         $this->compileRoutes();
     }
 
-    public function execute(Request $request): OperationOutcome
+    public function execute(RequestInterface $request): OperationOutcome
     {
         $path = $request->getPath();
         $method = strtoupper($request->getMethod());

@@ -2,7 +2,7 @@
 
 namespace Rift\Core\Http\ResponseEmitters;
 
-use Rift\Core\Contracts\OperationOutcome;
+use Rift\Core\DataBus\OperationOutcome;
 use Rift\Core\Http\ResponseEmitters\AbstractEmitter;
 
 class TextEmitter extends AbstractEmitter {

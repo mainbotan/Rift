@@ -2,8 +2,8 @@
 
 namespace Rift\Core\Crypto\Modules;
 
-use Rift\Core\Contracts\Operation;
-use Rift\Core\Contracts\OperationOutcome;
+use Rift\Core\DataBus\Operation;
+use Rift\Core\DataBus\OperationOutcome;
 
 class UUID extends Operation {
 

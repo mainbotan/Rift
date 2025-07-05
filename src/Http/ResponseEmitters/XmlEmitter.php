@@ -3,7 +3,7 @@
 namespace Rift\Core\Http\ResponseEmitters;
 
 use SimpleXMLElement;
-use Rift\Core\Contracts\OperationOutcome;
+use Rift\Core\DataBus\OperationOutcome;
 use Rift\Core\Http\ResponseEmitters\AbstractEmitter;
 
 class XmlEmitter extends AbstractEmitter {

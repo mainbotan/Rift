@@ -14,11 +14,11 @@ namespace Rift\Core\Repositories;
 
 use PDO;
 use PDOException;
-use Rift\Core\Contracts\Operation;
-use Rift\Core\Contracts\OperationOutcome;
+use Rift\Core\DataBus\Operation;
+use Rift\Core\DataBus\OperationOutcome;
 use Rift\Core\Database\Connect;
 
-abstract class AbstractRouter extends Operation
+abstract class Router extends Operation
 {
     private array $connections = [];
     protected array $repositories = [];

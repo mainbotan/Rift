@@ -2,10 +2,11 @@
 
 namespace Rift\Core\Http;
 
-use Rift\Core\Contracts\Operation;
-use Rift\Core\Contracts\OperationOutcome;
+use Rift\Contracts\Http\RoutesBoxInterface;
+use Rift\Core\DataBus\Operation;
+use Rift\Core\DataBus\OperationOutcome;
 
-class RoutesBox {
+class RoutesBox implements RoutesBoxInterface {
     protected array $routes = [];
     protected array $groupStack = [];
     protected ?array $pendingMiddlewares = null;

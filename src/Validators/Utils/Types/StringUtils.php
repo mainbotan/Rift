@@ -12,7 +12,7 @@
 
 namespace Rift\Core\Validators\Utils\Types;
 
-use Rift\Core\Contracts\Operation;
+use Rift\Core\DataBus\Operation;
 
 class StringUtils extends Operation
 {

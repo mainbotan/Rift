@@ -13,7 +13,7 @@
 
 namespace Rift\Core\Validators;
 
-use Rift\Core\Contracts\OperationOutcome;
+use Rift\Core\DataBus\OperationOutcome;
 
 interface ValidatorInterface {
     public function execute(array $data): OperationOutcome;

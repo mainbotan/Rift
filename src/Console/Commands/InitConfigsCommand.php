@@ -9,8 +9,8 @@ use Rift\Core\Console\Utils\DirectoriesUtils;
 use Rift\Core\Console\Utils\StubsUtils;
 use Symfony\Component\Console\Input\InputOption;
 
-use Rift\Core\Contracts\Operation;
-use Rift\Core\Contracts\OperationOutcome;
+use Rift\Core\DataBus\Operation;
+use Rift\Core\DataBus\OperationOutcome;
 
 class InitConfigsCommand extends Command
 {

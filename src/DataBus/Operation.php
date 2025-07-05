@@ -10,7 +10,7 @@
  * |--------------------------------------------------------------------------
  */
 
-namespace Rift\Core\Contracts;
+namespace Rift\Core\DataBus;
 
 class Operation
 {

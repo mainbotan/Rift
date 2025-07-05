@@ -1,6 +1,6 @@
 <?php
 
-namespace Rift\Contracts\Http;
+namespace Rift\Contracts\Http\RoutesBox;
 
 interface RoutesBoxInterface {
     /**

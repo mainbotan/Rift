@@ -2,7 +2,7 @@
 
 namespace Rift\Contracts\Models;
 
-use Rift\Core\Contracts\OperationOutcome;
+use Rift\Core\DataBus\OperationOutcome;
 
 interface ModelInterface {
     /**

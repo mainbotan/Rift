@@ -8,7 +8,8 @@
       "Rift\\Core\\": "src/",
       "Rift\\Contracts\\": "contracts/",
       "Rift\\Console\\": "console/",
-      "Rift\\Validator\\": "modules/validator/"
+      "Rift\\Validator\\": "modules/validator/",
+      "Rift\\Crypto\\": "modules/crypto/"
     }
   },
   "autoload-dev": {

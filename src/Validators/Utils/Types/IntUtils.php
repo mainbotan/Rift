@@ -12,7 +12,7 @@
 
 namespace Rift\Core\Validators\Utils\Types;
 
-use Rift\Core\DataBus\Operation;
+use Rift\Core\Databus\Operation;
 
 class IntUtils extends Operation
 {

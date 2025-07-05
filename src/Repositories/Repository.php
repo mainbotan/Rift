@@ -15,8 +15,8 @@ namespace Rift\Core\Repositories;
 use PDO;
 use PDOStatement;
 use PDOException;
-use Rift\Core\DataBus\Operation;
-use Rift\Core\DataBus\OperationOutcome;
+use Rift\Core\Databus\Operation;
+use Rift\Core\Databus\OperationOutcome;
 
 abstract class Repository extends Operation
 {

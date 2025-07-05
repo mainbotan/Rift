@@ -2,7 +2,7 @@
 
 namespace Rift\Core\Http\ResponseEmitters;
 
-use Rift\Core\DataBus\OperationOutcome;
+use Rift\Core\Databus\OperationOutcome;
 use Rift\Core\Http\ResponseEmitters\EmitterInterface;
 
 class CompositeEmitter implements EmitterInterface {

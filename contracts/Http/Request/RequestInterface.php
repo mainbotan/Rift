@@ -3,7 +3,7 @@
 namespace Rift\Contracts\Http\Request;
 
 use Psr\Http\Message\ServerRequestInterface;
-use Rift\Core\DataBus\OperationOutcome;
+use Rift\Core\Databus\OperationOutcome;
 
 interface RequestInterface {
     /**

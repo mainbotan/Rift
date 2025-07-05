@@ -16,8 +16,8 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Rift\Console\Utils\DirectoriesUtils;
 use Symfony\Component\Console\Input\InputOption;
 
-use Rift\Core\DataBus\Operation;
-use Rift\Core\DataBus\OperationOutcome;
+use Rift\Core\Databus\Operation;
+use Rift\Core\Databus\OperationOutcome;
 
 class InitEnvCommand extends Command
 {

@@ -2,7 +2,7 @@
 
 namespace Rift\Contracts\Repositories;
 
-use Rift\Core\DataBus\OperationOutcome;
+use Rift\Core\Databus\OperationOutcome;
 
 
 interface RepositoryInterface {

@@ -13,8 +13,8 @@
 namespace Rift\Core\Models;
 
 use Rift\Contracts\Models\ModelInterface;
-use Rift\Core\DataBus\Operation;
-use Rift\Core\DataBus\OperationOutcome;
+use Rift\Core\Databus\Operation;
+use Rift\Core\Databus\OperationOutcome;
 use Rift\Core\Validators\Utils\SchemaValidator;
 
 abstract class Model extends Operation implements ModelInterface

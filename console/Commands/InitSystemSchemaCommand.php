@@ -16,7 +16,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 use RuntimeException;
 use Symfony\Component\Console\Input\InputOption;
 
-use Rift\Core\DataBus\OperationOutcome;
+use Rift\Core\Databus\OperationOutcome;
 use Rift\Console\Utils\DirectoriesUtils;
 use Rift\Core\Configs\ConfigReader;
 

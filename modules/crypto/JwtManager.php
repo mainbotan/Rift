@@ -3,8 +3,8 @@ namespace Rift\Core\Crypto\Modules;
 
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
-use Rift\Core\DataBus\Operation;
-use Rift\Core\DataBus\OperationOutcome;
+use Rift\Core\Databus\Operation;
+use Rift\Core\Databus\OperationOutcome;
 
 class JwtManager extends Operation
 {

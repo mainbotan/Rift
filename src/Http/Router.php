@@ -3,11 +3,11 @@
 namespace Rift\Core\Http;
 
 use DI\Container;
-use Rift\Contracts\Http\RequestInterface;
-use Rift\Contracts\Http\RouterInterface;
-use Rift\Contracts\Http\RoutesBoxInterface;
-use Rift\Core\DataBus\Operation;
-use Rift\Core\DataBus\OperationOutcome;
+use Rift\Contracts\Http\Router\RouterInterface;
+use Psr\Http\Message\RequestInterface;
+use Rift\Contracts\Http\RoutesBox\RoutesBoxInterface;
+use Rift\Core\Databus\Operation;
+use Rift\Core\Databus\OperationOutcome;
 
 class Router extends Operation implements RouterInterface
 {

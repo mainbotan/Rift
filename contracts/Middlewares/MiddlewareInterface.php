@@ -2,7 +2,7 @@
 
 namespace Rift\Contracts\Middlewares;
 
-use Rift\Core\DataBus\OperationOutcome;
+use Rift\Core\Databus\OperationOutcome;
 use Rift\Core\Http\Request;
 
 interface MiddlewareInterface {

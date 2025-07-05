@@ -1,17 +1,14 @@
 <?php
-
 /*
  * |--------------------------------------------------------------------------
  * |
  * This file is a component of the Rift Miniframework core <v 1.0.0>
  * |
- * Interface for the action handler. 
- * The universal input point for processing the request.
+ * Interface for the action handler (UseCase). 
  * |
  * |--------------------------------------------------------------------------
  */
-
-namespace Rift\Core\Handler;
+namespace Rift\Contracts\Handlers;
 
 use Rift\Core\Contracts\OperationOutcome;
 

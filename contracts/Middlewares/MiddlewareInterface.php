@@ -1,6 +1,6 @@
 <?php
 
-namespace Rift\Core\Middlewares;
+namespace Rift\Contracts\Middlewares;
 
 use Rift\Core\Contracts\OperationOutcome;
 use Rift\Core\Http\Request;

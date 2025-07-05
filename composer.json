@@ -5,7 +5,8 @@
   "type": "library",
   "autoload": {
     "psr-4": {
-      "Rift\\Core\\": "src/"
+      "Rift\\Core\\": "src/",
+      "Rift\\Contracts\\": "contracts"
     }
   },
   "autoload-dev": {

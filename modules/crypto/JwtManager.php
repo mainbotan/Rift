@@ -6,7 +6,7 @@ use Firebase\JWT\Key;
 use Rift\Core\Databus\Operation;
 use Rift\Core\Databus\OperationOutcome;
 
-class JwtManager extends Operation
+class JwtManager
 {
     private string $secretKey;
     private string $algorithm;
@@ -18,8 +18,8 @@ class JwtManager extends Operation
         string $algorithm = 'HS256'
     ) {
         if (!in_array($algorithm, ['HS256', 'HS384', 'HS512'])) {
-            return self::error(
-                self::HTTP_INTERNAL_SERVER_ERROR,
+            return Operation::error(
+                Operation::HTTP_INTERNAL_SERVER_ERROR,
                 'Unsupported JWT algorithm'
             );
         }
@@ -37,20 +37,20 @@ class JwtManager extends Operation
                 'jti' => bin2hex(random_bytes(16))
             ]);
 
-            return self::success(JWT::encode($payload, $this->secretKey, $this->algorithm));
+            return Operation::success(JWT::encode($payload, $this->secretKey, $this->algorithm));
         } catch (\Exception $e) {
-            return self::error(self::HTTP_BAD_REQUEST, $e->getMessage());
+            return Operation::error(Operation::HTTP_BAD_REQUEST, $e->getMessage());
         }
     }
 
     public function decode(string $token): OperationOutcome
     {
         try {
-            return self::success(
+            return Operation::success(
                 (array) JWT::decode($token, new Key($this->secretKey, $this->algorithm))
             );
         } catch (\Exception $e) {
-            return self::error(self::HTTP_BAD_REQUEST, $e->getMessage());
+            return Operation::error(Operation::HTTP_BAD_REQUEST, $e->getMessage());
         }
     }
 
@@ -58,9 +58,9 @@ class JwtManager extends Operation
     {
         try {
             $this->decode($token);
-            return self::success(true);
+            return Operation::success(true);
         } catch (\Exception $e) {
-            return self::error(self::HTTP_INTERNAL_SERVER_ERROR, $e->getMessage());
+            return Operation::error(Operation::HTTP_INTERNAL_SERVER_ERROR, $e->getMessage());
         }
     }
 }

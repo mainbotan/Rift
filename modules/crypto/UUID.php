@@ -2,12 +2,9 @@
 
 namespace Rift\Core\Crypto\Modules;
 
-use Rift\Core\Databus\Operation;
-use Rift\Core\Databus\OperationOutcome;
+class UUID {
 
-class UUID extends Operation {
-
-    public static function generate() {
+    public static function generate(): string {
         $uuid = bin2hex(random_bytes(8));
         return substr($uuid, 0, 4) . '-' . substr($uuid, 4, 4) . '-' . substr($uuid, 8, 4);
     }

@@ -10,11 +10,11 @@
  * |--------------------------------------------------------------------------
  */
 
-namespace Rift\Core\Validators\Utils\Types;
+namespace Rift\Validator\Types;
 
 use Rift\Core\Databus\Operation;
 
-class IntUtils extends Operation
+class IntUtils
 {
     public static function checkRange(
         int $value,
@@ -23,18 +23,18 @@ class IntUtils extends Operation
         string $fieldName = 'value'
     ) {
         if ($value < $min || $value > $max) {
-            return self::error(self::HTTP_BAD_REQUEST, "$fieldName must be between $min and $max");
+            return Operation::error(Operation::HTTP_BAD_REQUEST, "$fieldName must be between $min and $max");
         }
 
-        return self::success(null);
+        return Operation::success(null);
     }
 
     public static function isPositive(int $value, string $fieldName = 'value')
     {
         if ($value < 0) {
-            return self::error(self::HTTP_BAD_REQUEST, "$fieldName must be positive");
+            return Operation::error(Operation::HTTP_BAD_REQUEST, "$fieldName must be positive");
         }
 
-        return self::success(null);
+        return Operation::success(null);
     }
 }

@@ -4,15 +4,15 @@ namespace Rift\Core\Crypto\Modules;
 use Rift\Core\Databus\Operation;
 use Rift\Core\Databus\OperationOutcome;
 
-class DataEncryptor extends Operation
+class DataEncryptor
 {
     public function __construct(
         private string $cipher = 'AES-256-CBC',
         private string $keyDerivation = 'sha256'
     ) {
         if (!in_array($this->cipher, openssl_get_cipher_methods())) {
-            return self::error(
-                self::HTTP_INTERNAL_SERVER_ERROR,
+            return Operation::error(
+                Operation::HTTP_INTERNAL_SERVER_ERROR,
                 'Unsupported cipher: ' . $this->cipher
             );
         }
@@ -21,8 +21,8 @@ class DataEncryptor extends Operation
     public function encrypt(string $data, string $key): OperationOutcome
     {
         if (strlen($key) < 32) {
-            return self::error(
-                self::HTTP_BAD_REQUEST,
+            return Operation::error(
+                Operation::HTTP_BAD_REQUEST,
                 'Encryption key must be at least 32 characters'
             );
         }
@@ -37,10 +37,10 @@ class DataEncryptor extends Operation
                 $iv
             );
 
-            return self::success(base64_encode($iv . $encrypted));
+            return Operation::success(base64_encode($iv . $encrypted));
         } catch (\Throwable $e) {
-            return self::error(
-                self::HTTP_INTERNAL_SERVER_ERROR,
+            return Operation::error(
+                Operation::HTTP_INTERNAL_SERVER_ERROR,
                 'Encryption failed',
                 [
                     'debug' => $e->getMessage(),
@@ -68,15 +68,15 @@ class DataEncryptor extends Operation
             );
 
             return $result !== false
-                ? self::success($result)
-                : self::error(
-                    self::HTTP_BAD_REQUEST,
+                ? Operation::success($result)
+                : Operation::error(
+                    Operation::HTTP_BAD_REQUEST,
                     'Decryption failed - invalid data or key',
                     ['openssl_error' => openssl_error_string()]
                 );
         } catch (\Throwable $e) {
-            return self::error(
-                self::HTTP_INTERNAL_SERVER_ERROR,
+            return Operation::error(
+                Operation::HTTP_INTERNAL_SERVER_ERROR,
                 'Decryption failed',
                 [
                     'debug' => $e->getMessage(),

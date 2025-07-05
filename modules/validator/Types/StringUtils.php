@@ -10,11 +10,11 @@
  * |--------------------------------------------------------------------------
  */
 
-namespace Rift\Core\Validators\Utils\Types;
+namespace Rift\Validator\Types;
 
 use Rift\Core\Databus\Operation;
 
-class StringUtils extends Operation
+class StringUtils
 {
     public static function checkLength(
         string $value,
@@ -25,22 +25,22 @@ class StringUtils extends Operation
         $length = mb_strlen($value);
 
         if ($length < $min) {
-            return self::error(self::HTTP_BAD_REQUEST, "$fieldName must be at least $min characters");
+            return Operation::error(Operation::HTTP_BAD_REQUEST, "$fieldName must be at least $min characters");
         }
 
         if ($length > $max) {
-            return self::error(self::HTTP_BAD_REQUEST, "$fieldName must be no more than $max characters");
+            return Operation::error(Operation::HTTP_BAD_REQUEST, "$fieldName must be no more than $max characters");
         }
 
-        return self::success(null);
+        return Operation::success(null);
     }
 
     public static function notEmpty(string $value, string $fieldName = 'string')
     {
         if (trim($value) === '') {
-            return self::error(self::HTTP_BAD_REQUEST, "$fieldName cannot be empty");
+            return Operation::error(Operation::HTTP_BAD_REQUEST, "$fieldName cannot be empty");
         }
 
-        return self::success(null);
+        return Operation::success(null);
     }
 }

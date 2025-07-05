@@ -5,7 +5,7 @@ namespace Rift\Contracts\Http\Router;
 use Rift\Core\Databus\OperationOutcome;
 use DI\Container;
 use Rift\Contracts\Http\RoutesBox\RoutesBoxInterface;
-use Psr\Http\Message\RequestInterface;
+use Rift\Contracts\Http\Request\RequestInterface;
 
 interface RouterInterface {
     /**

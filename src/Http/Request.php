@@ -17,7 +17,7 @@ use Nyholm\Psr7Server\ServerRequestCreator;
 use Rift\Core\Databus\Operation;
 use Rift\Core\Databus\OperationOutcome;
 use Psr\Http\Message\ServerRequestInterface;
-use Rift\Contracts\Http\RequestInterface;
+use Rift\Contracts\Http\Request\RequestInterface;
 
 class Request implements RequestInterface
 {

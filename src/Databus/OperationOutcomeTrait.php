@@ -10,7 +10,7 @@
  * |--------------------------------------------------------------------------
  */
 
-namespace Rift\Core\DataBus;
+namespace Rift\Core\Databus;
 
 trait OperationOutcomeTrait {
     const HTTP_OK = 200;

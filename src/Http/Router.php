@@ -4,7 +4,7 @@ namespace Rift\Core\Http;
 
 use DI\Container;
 use Rift\Contracts\Http\Router\RouterInterface;
-use Psr\Http\Message\RequestInterface;
+use Rift\Contracts\Http\Request\RequestInterface;
 use Rift\Contracts\Http\RoutesBox\RoutesBoxInterface;
 use Rift\Core\Databus\Operation;
 use Rift\Core\Databus\OperationOutcome;

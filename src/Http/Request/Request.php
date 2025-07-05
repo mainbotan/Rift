@@ -10,7 +10,7 @@
  * |--------------------------------------------------------------------------
  */
 
-namespace Rift\Core\Http;
+namespace Rift\Core\Http\Request;
 
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7Server\ServerRequestCreator;

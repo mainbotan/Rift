@@ -1,12 +1,20 @@
 <?php
-
-namespace Rift\Core\Console\Commands;
+/*
+ * |--------------------------------------------------------------------------
+ * |
+ * This file is a component of the Rift Miniframework core <v 1.0.0>
+ * |
+ * CLI component
+ * |
+ * |--------------------------------------------------------------------------
+ */
+namespace Rift\Console\Commands;
 
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Rift\Core\Console\Utils\DirectoriesUtils;
-use Rift\Core\Console\Utils\StubsUtils;
+use Rift\Console\Utils\DirectoriesUtils;
+use Rift\Console\Utils\StubsUtils;
 use Symfony\Component\Console\Input\InputOption;
 
 use Rift\Core\DataBus\Operation;

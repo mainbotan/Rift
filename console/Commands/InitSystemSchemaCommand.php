@@ -1,6 +1,14 @@
 <?php
-
-namespace Rift\Core\Console\Commands;
+/*
+ * |--------------------------------------------------------------------------
+ * |
+ * This file is a component of the Rift Miniframework core <v 1.0.0>
+ * |
+ * CLI component
+ * |
+ * |--------------------------------------------------------------------------
+ */
+namespace Rift\Console\Commands;
 
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -9,7 +17,7 @@ use RuntimeException;
 use Symfony\Component\Console\Input\InputOption;
 
 use Rift\Core\DataBus\OperationOutcome;
-use Rift\Core\Console\Utils\DirectoriesUtils;
+use Rift\Console\Utils\DirectoriesUtils;
 use Rift\Core\Configs\ConfigReader;
 
 class InitSystemSchemaCommand extends Command

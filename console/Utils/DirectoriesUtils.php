@@ -1,6 +1,14 @@
 <?php
-
-namespace Rift\Core\Console\Utils;
+/*
+ * |--------------------------------------------------------------------------
+ * |
+ * This file is a component of the Rift Miniframework core <v 1.0.0>
+ * |
+ * CLI component
+ * |
+ * |--------------------------------------------------------------------------
+ */
+namespace Rift\Console\Utils;
 
 use Rift\Core\DataBus\Operation;
 use Rift\Core\DataBus\OperationOutcome;

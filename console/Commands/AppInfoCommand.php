@@ -1,6 +1,14 @@
 <?php
-
-namespace Rift\Core\Console\Commands;
+/*
+ * |--------------------------------------------------------------------------
+ * |
+ * This file is a component of the Rift Miniframework core <v 1.0.0>
+ * |
+ * CLI component
+ * |
+ * |--------------------------------------------------------------------------
+ */
+namespace Rift\Console\Commands;
 
 use Rift\Core\Configs\ConfigReader;
 use Symfony\Component\Console\Command\Command;

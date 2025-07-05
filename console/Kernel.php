@@ -1,15 +1,23 @@
 <?php
-
-namespace Rift\Core\Console;
+/*
+ * |--------------------------------------------------------------------------
+ * |
+ * This file is a component of the Rift Miniframework core <v 1.0.0>
+ * |
+ * CLI component
+ * |
+ * |--------------------------------------------------------------------------
+ */
+namespace Rift\Console;
 
 use Symfony\Component\Console\Application;
-use Rift\Core\Console\Commands\InitCommand;
-use Rift\Core\Console\Commands\InitConfigsCommand;
+use Rift\Console\Commands\InitCommand;
+use Rift\Console\Commands\InitConfigsCommand;
 use Dotenv\Dotenv;
-use Rift\Core\Console\Commands\AppInfoCommand;
-use Rift\Core\Console\Commands\InitEnvCommand;
-use Rift\Core\Console\Commands\InitAppCommand;
-use Rift\Core\Console\Commands\InitSystemSchemaCommand;
+use Rift\Console\Commands\AppInfoCommand;
+use Rift\Console\Commands\InitEnvCommand;
+use Rift\Console\Commands\InitAppCommand;
+use Rift\Console\Commands\InitSystemSchemaCommand;
 
 class Kernel extends Application {
     public function __construct()

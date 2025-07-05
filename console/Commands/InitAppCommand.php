@@ -17,8 +17,8 @@ use Rift\Console\Utils\DirectoriesUtils;
 use Rift\Console\Utils\StubsUtils;
 use Symfony\Component\Console\Input\InputOption;
 
-use Rift\Core\DataBus\Operation;
-use Rift\Core\DataBus\OperationOutcome;
+use Rift\Core\Databus\Operation;
+use Rift\Core\Databus\OperationOutcome;
 
 class InitAppCommand extends Command
 {

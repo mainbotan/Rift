@@ -2,7 +2,7 @@
 
 namespace Rift\Core\Http\ResponseEmitters;
 
-use Rift\Core\DataBus\OperationOutcome;
+use Rift\Core\Databus\OperationOutcome;
 
 interface EmitterInterface {
     public function emit(OperationOutcome $outcome): void;

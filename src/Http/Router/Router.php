@@ -1,13 +1,21 @@
 <?php
-
-namespace Rift\Core\Http;
+/*
+ * |--------------------------------------------------------------------------
+ * |
+ * This file is a component of the Rift Miniframework core <v 1.0.0>
+ * |
+ * RESTful router.
+ * |
+ * |--------------------------------------------------------------------------
+ */
+namespace Rift\Core\Http\Router;
 
 use DI\Container;
-use Rift\Contracts\Http\RequestInterface;
-use Rift\Contracts\Http\RouterInterface;
-use Rift\Contracts\Http\RoutesBoxInterface;
-use Rift\Core\DataBus\Operation;
-use Rift\Core\DataBus\OperationOutcome;
+use Rift\Contracts\Http\Router\RouterInterface;
+use Rift\Contracts\Http\Request\RequestInterface;
+use Rift\Contracts\Http\RoutesBox\RoutesBoxInterface;
+use Rift\Core\Databus\Operation;
+use Rift\Core\Databus\OperationOutcome;
 
 class Router extends Operation implements RouterInterface
 {

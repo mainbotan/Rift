@@ -10,14 +10,14 @@
  * |--------------------------------------------------------------------------
  */
 
-namespace Rift\Core\Validators\Utils;
+namespace Rift\Validator;
 
-use Rift\Core\DataBus\Operation;
-use Rift\Core\DataBus\OperationOutcome;
-use Rift\Core\Validators\Utils\Types\IntUtils;
-use Rift\Core\Validators\Utils\Types\StringUtils;
+use Rift\Core\Databus\Operation;
+use Rift\Core\Databus\OperationOutcome;
+use Rift\Validator\Types\IntUtils;
+use Rift\Validator\Types\StringUtils;
 
-class SchemaValidator extends Operation
+class SchemaValidator
 {
     public static function validate(array $schema, array $data): OperationOutcome
     {
@@ -27,7 +27,7 @@ class SchemaValidator extends Operation
 
             // Отсутствие обязательного
             if ($value === null && !$isOptional) {
-                return self::error(self::HTTP_BAD_REQUEST, $rules['message'] ?? "Missing required field: $field");
+                return Operation::error(Operation::HTTP_BAD_REQUEST, $rules['message'] ?? "Missing required field: $field");
             }
 
             // Не проверяем необязательное отсутствующее
@@ -42,72 +42,72 @@ class SchemaValidator extends Operation
                     $lengthMin = $rules['min'] ?? 0;
                     $lengthMax = $rules['max'] ?? PHP_INT_MAX;
                     $result = StringUtils::checkLength((string)$value, $lengthMin, $lengthMax, $field);
-                    if ($result->code !== self::HTTP_OK) return $result;
+                    if ($result->code !== Operation::HTTP_OK) return $result;
 
                     if (isset($rules['enum']) && !in_array($value, $rules['enum'], true)) {
-                        return self::error(self::HTTP_BAD_REQUEST, $rules['message'] ?? "$field must be one of: " . implode(', ', $rules['enum']));
+                        return Operation::error(Operation::HTTP_BAD_REQUEST, $rules['message'] ?? "$field must be one of: " . implode(', ', $rules['enum']));
                     }
                     break;
 
                 case 'int':
                     if (!is_numeric($value)) {
-                        return self::error(self::HTTP_BAD_REQUEST, $rules['message'] ?? "$field must be an integer");
+                        return Operation::error(Operation::HTTP_BAD_REQUEST, $rules['message'] ?? "$field must be an integer");
                     }
                     $value = (int)$value;
                     $min = $rules['min'] ?? PHP_INT_MIN;
                     $max = $rules['max'] ?? PHP_INT_MAX;
                     $result = IntUtils::checkRange($value, $min, $max, $field);
-                    if ($result->code !== self::HTTP_OK) return $result;
+                    if ($result->code !== Operation::HTTP_OK) return $result;
 
                     if (isset($rules['enum']) && !in_array($value, $rules['enum'], true)) {
-                        return self::error(self::HTTP_BAD_REQUEST, $rules['message'] ?? "$field must be one of: " . implode(', ', $rules['enum']));
+                        return Operation::error(Operation::HTTP_BAD_REQUEST, $rules['message'] ?? "$field must be one of: " . implode(', ', $rules['enum']));
                     }
                     break;
 
                 case 'float':
                     if (!is_numeric($value)) {
-                        return self::error(self::HTTP_BAD_REQUEST, $rules['message'] ?? "$field must be a float");
+                        return Operation::error(Operation::HTTP_BAD_REQUEST, $rules['message'] ?? "$field must be a float");
                     }
                     $value = (float)$value;
                     break;
 
                 case 'bool':
                     if (!is_bool($value) && !in_array($value, ['true', 'false', 0, 1, '0', '1'], true)) {
-                        return self::error(self::HTTP_BAD_REQUEST, $rules['message'] ?? "$field must be a boolean");
+                        return Operation::error(Operation::HTTP_BAD_REQUEST, $rules['message'] ?? "$field must be a boolean");
                     }
                     break;
 
                 case 'array':
                     if (!is_array($value)) {
-                        return self::error(self::HTTP_BAD_REQUEST, $rules['message'] ?? "$field must be an array");
+                        return Operation::error(Operation::HTTP_BAD_REQUEST, $rules['message'] ?? "$field must be an array");
                     }
                     
                     if (isset($rules['schema'])) {
                         foreach ($value as $item) {
                             if (!is_array($item)) {
-                                return self::error(self::HTTP_BAD_REQUEST, "Each item in $field must be an object");
+                                return Operation::error(Operation::HTTP_BAD_REQUEST, "Each item in $field must be an object");
                             }
                             $res = self::validate($rules['schema'], $item);
-                            if ($res->code !== self::HTTP_OK) return $res;
+                            if ($res->code !== Operation::HTTP_OK) return $res;
                         }
                     }
                     break;
 
                 default:
-                    return self::error(500, "Unsupported type: {$type}");
+                    return Operation::error(Operation::HTTP_INTERNAL_SERVER_ERROR, "Unsupported type: {$type}");
             }
 
             // Кастомный валидатор
             if (isset($rules['validate']) && is_callable($rules['validate'])) {
                 $customResult = $rules['validate']($value, $data);
-                if ($customResult instanceof OperationOutcome && $customResult->code !== self::HTTP_OK) {
+                if ($customResult instanceof OperationOutcome && $customResult->code !== Operation::HTTP_OK) {
                     return $customResult;
                 } elseif ($customResult === false) {
-                    return self::error(self::HTTP_BAD_REQUEST, $rules['message'] ?? "$field failed custom validation");
+                    return Operation::error(Operation::HTTP_BAD_REQUEST, $rules['message'] ?? "$field failed custom validation");
                 }
             }
         }
 
-        return self::success(null);
+        return Operation::success(null);
     }
 }

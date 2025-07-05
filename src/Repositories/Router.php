@@ -14,8 +14,8 @@ namespace Rift\Core\Repositories;
 
 use PDO;
 use PDOException;
-use Rift\Core\DataBus\Operation;
-use Rift\Core\DataBus\OperationOutcome;
+use Rift\Core\Databus\Operation;
+use Rift\Core\Databus\OperationOutcome;
 use Rift\Core\Database\Connect;
 
 abstract class Router extends Operation

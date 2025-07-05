@@ -10,14 +10,14 @@
  * |--------------------------------------------------------------------------
  */
 
-namespace Rift\Core\Http;
+namespace Rift\Core\Http\Request;
 
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7Server\ServerRequestCreator;
-use Rift\Core\DataBus\Operation;
-use Rift\Core\DataBus\OperationOutcome;
+use Rift\Core\Databus\Operation;
+use Rift\Core\Databus\OperationOutcome;
 use Psr\Http\Message\ServerRequestInterface;
-use Rift\Contracts\Http\RequestInterface;
+use Rift\Contracts\Http\Request\RequestInterface;
 
 class Request implements RequestInterface
 {

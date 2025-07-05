@@ -13,8 +13,8 @@
 namespace Rift\Core\Database;
 
 use PDO;
-use Rift\Core\DataBus\Operation;
-use Rift\Core\DataBus\OperationOutcome;
+use Rift\Core\Databus\Operation;
+use Rift\Core\Databus\OperationOutcome;
 
 class Connect extends Operation
 {

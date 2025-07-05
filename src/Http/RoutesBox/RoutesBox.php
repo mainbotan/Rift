@@ -1,10 +1,18 @@
 <?php
+/*
+ * |--------------------------------------------------------------------------
+ * |
+ * This file is a component of the Rift Miniframework core <v 1.0.0>
+ * |
+ * Routes registration.
+ * |
+ * |--------------------------------------------------------------------------
+ */
+namespace Rift\Core\Http\RoutesBox;
 
-namespace Rift\Core\Http;
-
-use Rift\Contracts\Http\RoutesBoxInterface;
-use Rift\Core\DataBus\Operation;
-use Rift\Core\DataBus\OperationOutcome;
+use Rift\Contracts\Http\RoutesBox\RoutesBoxInterface;
+use Rift\Core\Databus\Operation;
+use Rift\Core\Databus\OperationOutcome;
 
 class RoutesBox implements RoutesBoxInterface {
     protected array $routes = [];

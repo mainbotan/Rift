@@ -13,8 +13,8 @@
 
 namespace Rift\Core\Database\Configurators;
 
-use Rift\Core\DataBus\Operation;
-use Rift\Core\DataBus\OperationOutcome;
+use Rift\Core\Databus\Operation;
+use Rift\Core\Databus\OperationOutcome;
 use Rift\Core\Database\Connect;
 
 abstract class TenantConfigurator extends Operation

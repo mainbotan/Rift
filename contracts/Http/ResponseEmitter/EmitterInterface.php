@@ -2,7 +2,7 @@
 
 namespace Rift\Contracts\Http\ResponseEmitter;
 
-use Rift\Core\DataBus\OperationOutcome;
+use Rift\Core\Databus\OperationOutcome;
 
 interface EmitterInterface {
     /**

@@ -14,8 +14,8 @@ namespace Rift\Core\Configs;
 
 use Exception;
 use PhpParser\Node\Stmt\Echo_;
-use Rift\Core\Contracts\Operation;
-use Rift\Core\Contracts\OperationOutcome;
+use Rift\Core\DataBus\Operation;
+use Rift\Core\DataBus\OperationOutcome;
 
 class ConfigReader extends Operation
 {

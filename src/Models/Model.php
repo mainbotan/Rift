@@ -12,11 +12,12 @@
 
 namespace Rift\Core\Models;
 
-use Rift\Core\Contracts\Operation;
-use Rift\Core\Contracts\OperationOutcome;
+use Rift\Contracts\Models\ModelInterface;
+use Rift\Core\DataBus\Operation;
+use Rift\Core\DataBus\OperationOutcome;
 use Rift\Core\Validators\Utils\SchemaValidator;
 
-abstract class AbstractModel extends Operation
+abstract class Model extends Operation implements ModelInterface
 {
     abstract public static function getSchema(): array;
 

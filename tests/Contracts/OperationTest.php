@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Tests\Contracts;
 
 use PHPUnit\Framework\TestCase;
-use Rift\Core\Contracts\Operation;
-use Rift\Core\Contracts\OperationOutcome;
+use Rift\Core\DataBus\Operation;
+use Rift\Core\DataBus\OperationOutcome;
 
 class OperationTest extends TestCase
 {

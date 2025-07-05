@@ -6,7 +6,9 @@
   "autoload": {
     "psr-4": {
       "Rift\\Core\\": "src/",
-      "Rift\\Contracts\\": "contracts"
+      "Rift\\Contracts\\": "contracts/",
+      "Rift\\Modules\\": "modules/",
+      "Rift\\Console\\": "console/"
     }
   },
   "autoload-dev": {

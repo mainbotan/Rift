@@ -15,10 +15,10 @@ namespace Rift\Core\Repositories;
 use PDO;
 use PDOStatement;
 use PDOException;
-use Rift\Core\Contracts\Operation;
-use Rift\Core\Contracts\OperationOutcome;
+use Rift\Core\DataBus\Operation;
+use Rift\Core\DataBus\OperationOutcome;
 
-abstract class AbstractRepository extends Operation
+abstract class Repository extends Operation
 {
     public function __construct(
         protected PDO $pdo,

@@ -10,7 +10,7 @@
  */
 namespace Rift\Contracts\Handlers;
 
-use Rift\Core\Contracts\OperationOutcome;
+use Rift\Core\DataBus\OperationOutcome;
 
 interface HandlerInterface {
     public function execute(array $data): OperationOutcome;

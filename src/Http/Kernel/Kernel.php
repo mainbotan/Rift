@@ -43,8 +43,23 @@ class Kernel implements KernelInterface {
      * @return OperationOutcome
      */
     public function handle(ServerRequestInterface $request): OperationOutcome {
-        $container ??= $this->initContainer();
-    }
+        $this->container ??= $this->initContainer();
+        
+        try {
+            $result = $this->container->get(RouterInterface::class)->execute($request);
+            
+            if (!$result instanceof OperationOutcome) {
+                $result = Operation::error(
+                    Operation::HTTP_INTERNAL_SERVER_ERROR,
+                    'Router returned invalid response type'
+                );
+            }
+        } catch (\Exception $e) {
+            $result = Operation::error(Operation::HTTP_INTERNAL_SERVER_ERROR, "The router is not registered in the di config: {$e->getMessage()}");
+        } 
+        $this->emit($result, $request);
+        return $result;
+    }   
 
     /**
      * Initializing the DI container

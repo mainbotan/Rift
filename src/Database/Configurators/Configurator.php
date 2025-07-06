@@ -17,7 +17,7 @@ use Rift\Core\Databus\Operation;
 use Rift\Core\Databus\OperationOutcome;
 use Rift\Core\Database\Connect;
 
-abstract class TenantConfigurator extends Operation
+class Configurator
 {
     protected static array $models = [];
     protected static string $tenantId;
@@ -31,14 +31,14 @@ abstract class TenantConfigurator extends Operation
     public static function configure(): OperationOutcome
     {
         if (static::$tenantId === 'system') {
-            return self::error(self::HTTP_BAD_REQUEST, 'The "system" scheme is reserved by Rift');
+            return Operation::error(Operation::HTTP_BAD_REQUEST, 'The "system" scheme is reserved by Rift');
         }
 
         $schema = 'tenant_' . static::$tenantId;
 
         // 1. Получаем admin подключение
         $adminPdoRequest = Connect::adminPdo();
-        if ($adminPdoRequest->code !== self::HTTP_OK) {
+        if ($adminPdoRequest->code !== Operation::HTTP_OK) {
             return $adminPdoRequest;
         }
         $adminPdo = $adminPdoRequest->result;
@@ -51,7 +51,7 @@ abstract class TenantConfigurator extends Operation
                 $adminPdo->exec("CREATE DATABASE IF NOT EXISTS {$_ENV['DB_NAME']}_{$schema}");
             }
         } catch (\PDOException $e) {
-            return self::error(500, "Failed to create tenant schema", [
+            return Operation::error(500, "Failed to create tenant schema", [
                 'tenant' => static::$tenantId,
                 'error' => $e->getMessage()
             ]);
@@ -59,7 +59,7 @@ abstract class TenantConfigurator extends Operation
 
         // 3. Подключаемся к схеме/базе тенанта
         $tenantPdoRequest = Connect::getPdoForSchema($schema);
-        if ($tenantPdoRequest->code !== self::HTTP_OK) {
+        if ($tenantPdoRequest->code !== Operation::HTTP_OK) {
             return $tenantPdoRequest;
         }
         $tenantPdo = $tenantPdoRequest->result;
@@ -69,13 +69,13 @@ abstract class TenantConfigurator extends Operation
             try {
                 $tenantPdo->exec($model::getMigrationSQL($schema));
             } catch (\PDOException $e) {
-                return self::error(self::HTTP_INTERNAL_SERVER_ERROR, "Failed to create table for model: " . $model, [
+                return Operation::error(Operation::HTTP_INTERNAL_SERVER_ERROR, "Failed to create table for model: " . $model, [
                     'tenant' => static::$tenantId,
                     'error' => $e->getMessage()
                 ]);
             }
         }
 
-        return self::success("Tenant " . static::$tenantId . " configured successfully");
+        return Operation::success("Tenant " . static::$tenantId . " configured successfully");
     }
 }

@@ -2,7 +2,7 @@
 
 namespace Rift\Core\Http\ResponseEmitters;
 
-use Rift\Core\Http\ResponseEmitters\EmitterInterface;
+use Rift\Contracts\Http\ResponseEmitter\EmitterInterface;
 
 abstract class AbstractEmitter implements EmitterInterface {
     protected function setHeaders(string $contentType): void {

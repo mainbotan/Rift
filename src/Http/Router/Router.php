@@ -17,7 +17,7 @@ use Rift\Contracts\Http\RoutesBox\RoutesBoxInterface;
 use Rift\Core\Databus\Operation;
 use Rift\Core\Databus\OperationOutcome;
 
-class Router extends Operation implements RouterInterface
+class Router implements RouterInterface
 {
     private array $compiledRoutes = [];
     private array $routes = [];
@@ -64,7 +64,7 @@ class Router extends Operation implements RouterInterface
             return $this->executeHandler($route['handler'], $payload);
         }
 
-        return self::error(self::HTTP_NOT_FOUND, 'Path not found');
+        return Operation::error(Operation::HTTP_NOT_FOUND, 'Path not found');
     }
 
     private function compileRoutes(): void
@@ -107,11 +107,11 @@ class Router extends Operation implements RouterInterface
         return $params;
     }
 
-    private function processMiddlewares(array $middlewares, Request $request): OperationOutcome
+    private function processMiddlewares(array $middlewares, RequestInterface $request): OperationOutcome
     {
         foreach ($middlewares as $middleware) {
             if (!class_exists($middleware)) {
-                return self::error(500, "Middleware class {$middleware} not found");
+                return Operation::error(Operation::HTTP_INTERNAL_SERVER_ERROR, "Middleware class {$middleware} not found");
             }
             
             $result = $this->container->get($middleware)->execute($request);
@@ -122,21 +122,21 @@ class Router extends Operation implements RouterInterface
             $request = $result->result ?? $request;
         }
         
-        return self::success($request);
+        return Operation::success($request);
     }
 
     private function executeHandler(string $handler, array $payload): OperationOutcome
     {
         if (empty($handler)) {
-            return self::error(self::HTTP_INTERNAL_SERVER_ERROR, 'Path handler not found');
+            return Operation::error(Operation::HTTP_INTERNAL_SERVER_ERROR, 'Path handler not found');
         }
 
         try {
             $handlerInstance = $this->container->get($handler);
             return $handlerInstance->execute($payload);
         } catch (\Throwable $e) {
-            return self::error(
-                self::HTTP_INTERNAL_SERVER_ERROR, 
+            return Operation::error(
+                Operation::HTTP_INTERNAL_SERVER_ERROR, 
                 "Invalid path handler: {$e->getMessage()}",
                 ['debug' => ['trace' => $e->getTraceAsString()]]
             );

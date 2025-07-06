@@ -1,8 +1,16 @@
 <?php
-
+/*
+ * |--------------------------------------------------------------------------
+ * |
+ * This file is a component of the Rift Miniframework core <v 1.0.0>
+ * |
+ * Http Kernel interface.
+ * |
+ * |--------------------------------------------------------------------------
+ */
 namespace Rift\Contracts\Http\Kernel;
 
-use Rift\Contracts\Http\Request\RequestInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use Rift\Core\Databus\OperationOutcome;
 
 interface KernelInterface {
@@ -11,5 +19,5 @@ interface KernelInterface {
      * processing request
      * @return OperationOutcome
      */
-    public function handle(RequestInterface $request): OperationOutcome;
+    public function handle(ServerRequestInterface $request): OperationOutcome;
 }

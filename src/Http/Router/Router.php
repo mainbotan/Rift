@@ -12,7 +12,7 @@ namespace Rift\Core\Http\Router;
 
 use DI\Container;
 use Rift\Contracts\Http\Router\RouterInterface;
-use Rift\Contracts\Http\Request\RequestInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use Rift\Contracts\Http\RoutesBox\RoutesBoxInterface;
 use Rift\Core\Databus\Operation;
 use Rift\Core\Databus\OperationOutcome;
@@ -30,9 +30,9 @@ class Router implements RouterInterface
         $this->compileRoutes();
     }
 
-    public function execute(RequestInterface $request): OperationOutcome
+    public function execute(ServerRequestInterface $request): OperationOutcome
     {
-        $path = $request->getPath();
+        $path = $request->getUri()->getPath();
         $method = strtoupper($request->getMethod());
         
         foreach ($this->compiledRoutes as $route) {
@@ -107,7 +107,7 @@ class Router implements RouterInterface
         return $params;
     }
 
-    private function processMiddlewares(array $middlewares, RequestInterface $request): OperationOutcome
+    private function processMiddlewares(array $middlewares, ServerRequestInterface $request): OperationOutcome
     {
         foreach ($middlewares as $middleware) {
             if (!class_exists($middleware)) {

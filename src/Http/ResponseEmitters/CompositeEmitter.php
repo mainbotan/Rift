@@ -3,7 +3,8 @@
 namespace Rift\Core\Http\ResponseEmitters;
 
 use Rift\Core\Databus\OperationOutcome;
-use Rift\Core\Http\ResponseEmitters\EmitterInterface;
+use Rift\Contracts\Http\ResponseEmitter\EmitterInterface;
+use Psr\Http\Message\ServerRequestInterface;
 
 class CompositeEmitter implements EmitterInterface {
     public function __construct(
@@ -11,8 +12,8 @@ class CompositeEmitter implements EmitterInterface {
         private array $emitters
     ) {}
 
-    public function emit(OperationOutcome $outcome): void {
-        $acceptHeader = $_SERVER['HTTP_ACCEPT'] ?? 'application/json';
+    public function emit(OperationOutcome $outcome, ServerRequestInterface $request): void {
+        $acceptHeader = $request->getHeaderLine('HTTP_ACCEPT') ?? 'application/json';
         
         foreach ($this->emitters as $emitter) {
             if ($emitter->supports($acceptHeader)) {
@@ -22,7 +23,7 @@ class CompositeEmitter implements EmitterInterface {
         }
         
         // Fallback to JSON
-        (new JsonEmitter())->emit($outcome);
+        (new JsonEmitter())->emit($outcome, $request);
     }
 
     public function supports(string $contentType): bool {

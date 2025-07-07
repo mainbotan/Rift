@@ -10,7 +10,6 @@ use Rift\Core\Http\ResponseEmitters\JsonEmitter;
 use Rift\Core\Http\ResponseEmitters\XmlEmitter;
 use Rift\Core\Http\ResponseEmitters\TextEmitter;
 use Rift\Core\Http\Router\Router;
-use Rift\Core\Http\RoutesBox\RoutesBox;
 
 use function DI\autowire;
 use function DI\get;

@@ -44,13 +44,6 @@ class Router implements RouterInterface
                 continue;
             }
 
-            $params = $this->extractRouteParams($route['paramNames'], $matches);
-            $payload = array_merge(
-                $request->getQueryParams(),
-                $params,
-                $request->getBody()
-            );
-
             // Middleware processing
             if (!empty($route['middlewares'])) {
                 $middlewareResult = $this->processMiddlewares($route['middlewares'], $request);
@@ -61,7 +54,7 @@ class Router implements RouterInterface
             }
 
             // Route handler execution
-            return $this->executeHandler($route['handler'], $payload);
+            return $this->executeHandler($route['handler'], $request);
         }
 
         return Operation::error(Operation::HTTP_NOT_FOUND, 'Path not found');
@@ -125,7 +118,7 @@ class Router implements RouterInterface
         return Operation::success($request);
     }
 
-    private function executeHandler(string $handler, array $payload): OperationOutcome
+    private function executeHandler(string $handler, ServerRequestInterface $request): OperationOutcome
     {
         if (empty($handler)) {
             return Operation::error(Operation::HTTP_INTERNAL_SERVER_ERROR, 'Path handler not found');
@@ -133,7 +126,7 @@ class Router implements RouterInterface
 
         try {
             $handlerInstance = $this->container->get($handler);
-            return $handlerInstance->execute($payload);
+            return $handlerInstance->execute($request);
         } catch (\Throwable $e) {
             return Operation::error(
                 Operation::HTTP_INTERNAL_SERVER_ERROR, 

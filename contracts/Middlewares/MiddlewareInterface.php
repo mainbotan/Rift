@@ -2,9 +2,9 @@
 
 namespace Rift\Contracts\Middlewares;
 
+use Psr\Http\Message\ServerRequestInterface;
 use Rift\Core\Databus\OperationOutcome;
-use Rift\Core\Http\Request\Request;
 
 interface MiddlewareInterface {
-    public function execute(Request $request): OperationOutcome;
+    public function execute(ServerRequestInterface $request): OperationOutcome;
 }

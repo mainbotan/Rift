@@ -8,10 +8,9 @@
  * |
  * |--------------------------------------------------------------------------
  */
-namespace Rift\Core\Http\Kernel\Kernel;
+namespace Rift\Core\Http\Kernel;
 
 use Psr\Container\ContainerInterface;
-use DI\ContainerBuilder;
 use Psr\Http\Message\ServerRequestInterface;
 use Rift\Core\Databus\Operation;
 use Rift\Core\Databus\OperationOutcome;
@@ -21,20 +20,18 @@ use Rift\Contracts\Http\ResponseEmitter\EmitterInterface;
 use Rift\Contracts\Http\Router\RouterInterface;
 
 class Kernel implements KernelInterface {
-    // DI Configuration
-    private ?array $diConfiguration = null;
 
     // DI container
-    private ?ContainerInterface $container = null;
+    private ContainerInterface $container;
 
     /**
      * Construct kernel
      * @param array application di configuration
      */
     public function __construct(
-        array $diConfiguration
+        ContainerInterface $container
     ) { 
-        $this->diConfiguration = $diConfiguration;
+        $this->container = $container;
     }
 
     /**
@@ -43,8 +40,6 @@ class Kernel implements KernelInterface {
      * @return OperationOutcome
      */
     public function handle(ServerRequestInterface $request): OperationOutcome {
-        $this->container ??= $this->initContainer();
-        
         try {
             $result = $this->container->get(RouterInterface::class)->execute($request);
             
@@ -60,16 +55,6 @@ class Kernel implements KernelInterface {
         $this->emit($result, $request);
         return $result;
     }   
-
-    /**
-     * Initializing the DI container
-     * @return ContainerInterface
-     */
-    public function initContainer(): ContainerInterface {
-        $builder = new ContainerBuilder();
-        $builder->addDefinitions($this->diConfiguration);
-        return $builder->build();
-    }
 
     /**
      * Output of the execution result

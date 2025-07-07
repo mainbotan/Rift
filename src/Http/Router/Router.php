@@ -10,7 +10,7 @@
  */
 namespace Rift\Core\Http\Router;
 
-use DI\Container;
+use Psr\Container\ContainerInterface;
 use Rift\Contracts\Http\Router\RouterInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Rift\Contracts\Http\RoutesBox\RoutesBoxInterface;
@@ -24,7 +24,7 @@ class Router implements RouterInterface
     
     public function __construct(
         private RoutesBoxInterface $routesBox, 
-        private Container $container
+        private ContainerInterface $container
     ) {
         $this->routes = $routesBox->getRoutes();
         $this->compileRoutes();

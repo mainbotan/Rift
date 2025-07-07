@@ -8,7 +8,7 @@
  * |
  * |--------------------------------------------------------------------------
  */
-namespace Rift\Core\Console\Utils;
+namespace Rift\Console\Utils;
 
 use Rift\Core\Databus\OperationOutcome;
 use Rift\Core\Databus\Operation;

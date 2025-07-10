@@ -2,11 +2,12 @@
 
 namespace Rift\Core\Http\ResponseEmitters;
 
+use Psr\Http\Message\ServerRequestInterface;
 use Rift\Core\Databus\OperationOutcome;
 use Rift\Core\Http\ResponseEmitters\AbstractEmitter;
 
 class JsonEmitter extends AbstractEmitter {
-    public function emit(OperationOutcome $outcome): void {
+    public function emit(OperationOutcome $outcome, ServerRequestInterface $request): void {
         $this->setHeaders('application/json');
         
         echo json_encode([

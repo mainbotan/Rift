@@ -10,13 +10,13 @@
  * |--------------------------------------------------------------------------
  */
 
-namespace Rift\Core\Database;
+namespace Rift\Core\Database\Bridge\PDO;
 
 use PDO;
 use Rift\Core\Databus\Operation;
 use Rift\Core\Databus\OperationOutcome;
 
-class Connect extends Operation
+class Connector
 {
     /**
      * Развёртывание схем
@@ -31,7 +31,7 @@ class Connect extends Operation
         };
 
         if (!$dsn) {
-            return self::error(500, "Unsupported DB driver: {$driver}", [
+            return Operation::error(Operation::HTTP_INTERNAL_SERVER_ERROR, "Unsupported DB driver: {$driver}", [
                 'driver' => $driver,
             ]);
         }
@@ -41,10 +41,10 @@ class Connect extends Operation
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
             ]);
 
-            return self::success($pdo);
+            return Operation::success($pdo);
 
         } catch (\PDOException $e) {
-            return self::error(500, "Admin DB connection failed", [
+            return Operation::error(Operation::HTTP_INTERNAL_SERVER_ERROR, "Admin DB connection failed", [
                 'error' => $e->getMessage()
             ]);
         }
@@ -82,9 +82,9 @@ class Connect extends Operation
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
             ]);
 
-            return self::success($pdo);
+            return Operation::success($pdo);
         } catch (\PDOException $e) {
-            return self::error(500, "Schema connection failed", [
+            return Operation::error(Operation::HTTP_INTERNAL_SERVER_ERROR, "Schema connection failed", [
                 'schema' => $schema,
                 'error' => $e->getMessage()
             ]);

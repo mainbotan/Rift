@@ -5,9 +5,10 @@ namespace Rift\Core\Http\ResponseEmitters;
 use SimpleXMLElement;
 use Rift\Core\Databus\OperationOutcome;
 use Rift\Core\Http\ResponseEmitters\AbstractEmitter;
+use Psr\Http\Message\ServerRequestInterface;
 
 class XmlEmitter extends AbstractEmitter {
-    public function emit(OperationOutcome $outcome): void {
+    public function emit(OperationOutcome $outcome, ServerRequestInterface $request): void {
         $this->setHeaders('application/xml');
         
         $xml = new SimpleXMLElement('<response/>');

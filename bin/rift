@@ -19,11 +19,11 @@ foreach ($autoloadCandidates as $autoload) {
     }
 }
 
-if (!class_exists('Rift\Core\Console\Kernel')) {
+if (!class_exists('Rift\Console\Kernel')) {
     die("Error: Rift kernel not found. Check autoload paths.\n");
 }
 
-use Rift\Core\Console\Kernel;
+use Rift\Console\Kernel;
 
 $app = new Kernel();
 $app->run();

@@ -30,43 +30,49 @@ class InitCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        // 1. Динамически определяем путь до бинарника
-        $binaryPath = $this->resolveBinaryPath();
+        // // 1. Динамически определяем путь до бинарника
+        // $binaryPath = $this->resolveBinaryPath();
 
-        if (!$binaryPath || !file_exists($binaryPath)) {
-            $output->writeln('<error>Rift binary not found. Tried:</error>');
-            $output->writeln('  - RIFT_BIN_PATH env variable');
-            $output->writeln('  - Composer vendor dir');
-            $output->writeln('  - Relative to core package');
-            return Command::FAILURE;
-        }
+        // if (!$binaryPath || !file_exists($binaryPath)) {
+        //     $output->writeln('<error>Rift binary not found. Tried:</error>');
+        //     $output->writeln('  - RIFT_BIN_PATH env variable');
+        //     $output->writeln('  - Composer vendor dir');
+        //     $output->writeln('  - Relative to core package');
+        //     return Command::FAILURE;
+        // }
 
-        // 2. Делаем бинарник исполняемым (если нужно)
-        if (!is_executable($binaryPath)) {
-            chmod($binaryPath, 0755);
-            $output->writeln("<info>Made binary executable: {$binaryPath}</info>");
-        }
+        // // 2. Делаем бинарник исполняемым (если нужно)
+        // if (!is_executable($binaryPath)) {
+        //     chmod($binaryPath, 0755);
+        //     $output->writeln("<info>Made binary executable: {$binaryPath}</info>");
+        // }
 
-        // 3. Предлагаем варианты установки
-        $output->writeln("\n<question>Choose installation method:</question>");
-        $output->writeln("  1. <comment>Symlink to /usr/local/bin</comment> (requires sudo)");
-        $output->writeln("  2. <comment>User-local install (~/.local/bin)</comment> (recommended)");
-        $output->writeln("  3. <comment>Docker alias</comment> (safe for containers)");
-        $output->writeln("  4. <comment>Just show path</comment> (manual setup)");
+        // // 3. Предлагаем варианты установки
+        // $output->writeln("\n<question>Choose installation method:</question>");
+        // $output->writeln("  1. <comment>Symlink to /usr/local/bin</comment> (requires sudo)");
+        // $output->writeln("  2. <comment>User-local install (~/.local/bin)</comment> (recommended)");
+        // $output->writeln("  3. <comment>Docker alias</comment> (safe for containers)");
+        // $output->writeln("  4. <comment>Just show path</comment> (manual setup)");
 
-        $choice = $this->askForChoice($input, $output, [1, 2, 3, 4]);
+        // $choice = $this->askForChoice($input, $output, [1, 2, 3, 4]);
 
-        switch ($choice) {
-            case 1:
-                return $this->installSystemWide($binaryPath, $output);
-            case 2:
-                return $this->installUserLocal($binaryPath, $output);
-            case 3:
-                return $this->setupDockerAlias($binaryPath, $output);
-            default:
-                $this->showManualInstructions($binaryPath, $output);
-                return Command::SUCCESS;
-        }
+        // switch ($choice) {
+        //     case 1:
+        //         return $this->installSystemWide($binaryPath, $output);
+        //     case 2:
+        //         return $this->installUserLocal($binaryPath, $output);
+        //     case 3:
+        //         return $this->setupDockerAlias($binaryPath, $output);
+        //     default:
+        //         $this->showManualInstructions($binaryPath, $output);
+        //         return Command::SUCCESS;
+        // }
+        $content = file_get_contents(__DIR__ . '/cli-art.txt');
+
+        $output->writeln("<info>Rift CLI v.1.0.0</info>");
+        $output->writeln($content);
+
+        return Command::SUCCESS;
     }
 
     private function resolveBinaryPath(): ?string

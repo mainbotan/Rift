@@ -1,12 +1,20 @@
 <?php
-
+/*
+ * |--------------------------------------------------------------------------
+ * |
+ * This file is a component of the Rift Miniframework core <v 1.0.0>
+ * |
+ * JSON Emitter.
+ * |
+ * |--------------------------------------------------------------------------
+ */
 namespace Rift\Core\Http\ResponseEmitters;
 
 use Psr\Http\Message\ServerRequestInterface;
 use Rift\Core\Databus\OperationOutcome;
-use Rift\Core\Http\ResponseEmitters\AbstractEmitter;
+use Rift\Core\Http\ResponseEmitters\Emitter;
 
-class JsonEmitter extends AbstractEmitter {
+class JsonEmitter extends Emitter {
     public function emit(OperationOutcome $outcome, ServerRequestInterface $request): void {
         $this->setHeaders('application/json');
         

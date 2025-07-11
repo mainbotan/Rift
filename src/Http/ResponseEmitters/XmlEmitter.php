@@ -1,13 +1,21 @@
 <?php
-
+/*
+ * |--------------------------------------------------------------------------
+ * |
+ * This file is a component of the Rift Miniframework core <v 1.0.0>
+ * |
+ * XML Emitter.
+ * |
+ * |--------------------------------------------------------------------------
+ */
 namespace Rift\Core\Http\ResponseEmitters;
 
 use SimpleXMLElement;
 use Rift\Core\Databus\OperationOutcome;
-use Rift\Core\Http\ResponseEmitters\AbstractEmitter;
+use Rift\Core\Http\ResponseEmitters\Emitter;
 use Psr\Http\Message\ServerRequestInterface;
 
-class XmlEmitter extends AbstractEmitter {
+class XmlEmitter extends Emitter {
     public function emit(OperationOutcome $outcome, ServerRequestInterface $request): void {
         $this->setHeaders('application/xml');
         

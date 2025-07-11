@@ -1,5 +1,4 @@
 <?php
-
 /*
  * |--------------------------------------------------------------------------
  * |
@@ -9,7 +8,6 @@
  * |
  * |--------------------------------------------------------------------------
  */
-
 namespace Rift\Core\Repositories;
 
 use PDO;
@@ -28,8 +26,6 @@ abstract class RepositoriesRouter extends Operation
     {
         
     }
-
-    public static function 
 
     private function getConnection(): OperationOutcome
     {

@@ -1,4 +1,13 @@
 <?php
+/*
+ * |--------------------------------------------------------------------------
+ * |
+ * This file is a component of the Rift Miniframework core <v 1.0.0>
+ * |
+ * DI Configuration.
+ * |
+ * |--------------------------------------------------------------------------
+ */
 
 use Psr\Container\ContainerInterface;
 use DI\Container;

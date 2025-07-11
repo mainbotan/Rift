@@ -1,5 +1,13 @@
 <?php
-
+/*
+ * |--------------------------------------------------------------------------
+ * |
+ * This file is a component of the Rift Miniframework core <v 1.0.0>
+ * |
+ * RESTful router interface.
+ * |
+ * |--------------------------------------------------------------------------
+ */
 namespace Rift\Contracts\Http\Router;
 
 use Rift\Core\Databus\OperationOutcome;

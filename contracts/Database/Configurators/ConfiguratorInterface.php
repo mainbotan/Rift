@@ -1,5 +1,13 @@
 <?php
-
+/*
+ * |--------------------------------------------------------------------------
+ * |
+ * This file is a component of the Rift Miniframework core <v 1.0.0>
+ * |
+ * Database schemas configurator Interface.
+ * |
+ * |--------------------------------------------------------------------------
+ */
 namespace Rift\Contracts\Database\Configurators;
 
 use Rift\Core\Databus\OperationOutcome;

@@ -1,12 +1,20 @@
 <?php
-
+/*
+ * |--------------------------------------------------------------------------
+ * |
+ * This file is a component of the Rift Miniframework core <v 1.0.0>
+ * |
+ * Text emitter.
+ * |
+ * |--------------------------------------------------------------------------
+ */
 namespace Rift\Core\Http\ResponseEmitters;
 
 use Rift\Core\Databus\OperationOutcome;
-use Rift\Core\Http\ResponseEmitters\AbstractEmitter;
+use Rift\Core\Http\ResponseEmitters\Emitter;
 use Psr\Http\Message\ServerRequestInterface;
 
-class TextEmitter extends AbstractEmitter {
+class TextEmitter extends Emitter {
     public function emit(OperationOutcome $outcome, ServerRequestInterface $request): void {
         $this->setHeaders('text/plain');
         

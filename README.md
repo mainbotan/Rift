@@ -1,1 +1,1 @@
-# Rift Miniframework ![Logo](https://github.com/mainbotan/Rift-Doc/blob/dev/public/rift-r.jpeg)
+# ![Logo](https://github.com/mainbotan/Rift-Doc/blob/dev/public/f45e72cf-1653-429a-bf7b-d044b921fbee.jpeg)

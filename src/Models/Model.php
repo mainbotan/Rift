@@ -85,18 +85,25 @@ abstract class Model implements ModelInterface
     
     protected static function generateColumnSQL(string $name, array $rules): string
     {
-        $dbType = $rules['db_type'];
-        
-        // Автокоррекция для MySQL
-        if ($_ENV['DB_DRIVER'] === 'mysql') {
-            if ($dbType === 'SERIAL PRIMARY KEY') {
-                return "{$name} INT AUTO_INCREMENT PRIMARY KEY";
-            }
-            if (str_contains($dbType, 'TIMESTAMP')) {
-                return "{$name} {$dbType} ON UPDATE CURRENT_TIMESTAMP";
-            }
+        if (!isset($rules['db_type'])) {
+            throw new \RuntimeException(
+                sprintf('Missing db_type for field "%s" in model %s', $name, static::class)
+            );
         }
-        
+
+        $dbType = $rules['db_type'];
+
+        // MySQL-specific преобразования
+        if ($_ENV['DB_DRIVER'] === 'mysql') {
+            $dbType = match (true) {
+                $dbType === 'SERIAL PRIMARY KEY' => 'INT AUTO_INCREMENT PRIMARY KEY',
+                str_starts_with($dbType, 'UUID') => 'CHAR(36)',
+                str_contains($dbType, 'TIMESTAMP') && !str_contains($dbType, 'DEFAULT') => 
+                    $dbType . ' DEFAULT CURRENT_TIMESTAMP',
+                default => $dbType
+            };
+        }
+
         return "{$name} {$dbType}";
     }
     

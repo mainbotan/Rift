@@ -14,30 +14,22 @@ namespace Rift\Core\Repositories;
 
 use PDO;
 use PDOException;
+use Rift\Core\Database\Bridge\PDO\Connector;
 use Rift\Core\Databus\Operation;
 use Rift\Core\Databus\OperationOutcome;
 use Rift\Core\Database\Connect;
 
-abstract class Router extends Operation
+abstract class RepositoriesRouter extends Operation
 {
     private array $connections = [];
-    protected array $repositories = [];
     protected string $schema;
-    
-    public function getRepository(string $key): OperationOutcome
+
+    public function __construct()
     {
-        if (!isset($this->repositories[$key])) {
-            return self::error(self::HTTP_NOT_FOUND, "Repository {$key} not found");
-        }
-
-        $pdoOperation = $this->getConnection();
-        if ($pdoOperation->code !== self::HTTP_OK) {
-            return $pdoOperation;
-        }
-
-        $config = $this->repositories[$key];
-        return self::success(new $config['class']($pdoOperation->result, new($config['model'])));
+        
     }
+
+    public static function 
 
     private function getConnection(): OperationOutcome
     {
@@ -52,7 +44,7 @@ abstract class Router extends Operation
         }
 
         // Создаем новое
-        $response = Connect::getPdoForSchema($this->schema);
+        $response = Connector::getPdoForSchema($this->schema);
         if ($response->code === self::HTTP_OK) {
             $this->connections[$this->schema] = $response->result;
         }

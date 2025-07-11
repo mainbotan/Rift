@@ -13,81 +13,107 @@
 namespace Rift\Core\Database\Bridge\PDO;
 
 use PDO;
+use PDOException;
+use Rift\Contracts\Database\Bridge\PDO\ConnectorInterface;
 use Rift\Core\Databus\Operation;
 use Rift\Core\Databus\OperationOutcome;
 
-class Connector
+final class Connector implements ConnectorInterface
 {
-    /**
-     * Развёртывание схем
-     */
-    public static function adminPdo(): OperationOutcome
+    private const DEFAULT_OPTIONS = [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        PDO::ATTR_EMULATE_PREPARES => false,
+    ];
+
+    public function __construct(
+        private string $driver,
+        private string $host,
+        private int $port,
+        private string $username,
+        private string $password,
+        private string $defaultDatabase
+    ) {
+    }
+
+    public static function fromEnv(array $env): self
     {
-        $driver = $_ENV['DB_DRIVER'] ?? 'pgsql';
+        return new self(
+            $env['DB_DRIVER'] ?? 'pgsql',
+            $env['DB_HOST'] ?? 'localhost',
+            (int) ($env['DB_PORT'] ?? self::getDefaultPort($env['DB_DRIVER'] ?? 'pgsql')),
+            $env['DB_USER'] ?? 'root',
+            $env['DB_PASSWORD'] ?? '',
+            $env['DB_NAME'] ?? 'rift'
+        );
+    }
 
-        $dsn = match ($driver) {
-            'mysql' => "mysql:host={$_ENV['DB_HOST']};port={$_ENV['DB_PORT']};dbname={$_ENV['DB_NAME']}",
-            'pgsql' => "pgsql:host={$_ENV['DB_HOST']};port={$_ENV['DB_PORT']};dbname={$_ENV['DB_NAME']}"
-        };
+    public function createAdminConnection(): OperationOutcome
+    {
+        return $this->createConnection($this->defaultDatabase);
+    }
 
-        if (!$dsn) {
-            return Operation::error(Operation::HTTP_INTERNAL_SERVER_ERROR, "Unsupported DB driver: {$driver}", [
-                'driver' => $driver,
-            ]);
-        }
+    public function createSchemaConnection(string $schema): OperationOutcome
+    {
+        return $this->createConnection(
+            $this->isPostgreSQL() ? $this->defaultDatabase : "{$this->defaultDatabase}_{$schema}",
+            $this->isPostgreSQL() ? $schema : null
+        );
+    }
 
+    private function createConnection(string $database, ?string $schema = null): OperationOutcome
+    {
         try {
-            $pdo = new PDO($dsn, $_ENV['DB_USER'], $_ENV['DB_PASSWORD'], [
-                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            ]);
+            $dsn = $this->buildDSN($database, $schema);
+            $pdo = new PDO($dsn, $this->username, $this->password, self::DEFAULT_OPTIONS);
+            
+            if ($this->isPostgreSQL() && $schema) {
+                $pdo->exec("SET search_path TO $schema");
+            }
 
             return Operation::success($pdo);
-
-        } catch (\PDOException $e) {
-            return Operation::error(Operation::HTTP_INTERNAL_SERVER_ERROR, "Admin DB connection failed", [
-                'error' => $e->getMessage()
-            ]);
+        } catch (PDOException $e) {
+            return Operation::error(
+                Operation::HTTP_INTERNAL_SERVER_ERROR,
+                'Database connection failed',
+                [
+                    'database' => $database,
+                    'schema' => $schema,
+                    'error' => $e->getMessage()
+                ]
+            );
         }
     }
 
-    /**
-     * Подключение к системной схеме
-     */
-    public static function systemPdo(): OperationOutcome
+    private function buildDSN(string $database, ?string $schema): string
     {
-        return self::getPdoForSchema('system');
+        $baseDSN = "{$this->driver}:host={$this->host};port={$this->port};dbname={$database}";
+
+        if ($this->isPostgreSQL() && $schema) {
+            $baseDSN .= ";options=--search_path={$schema}";
+        } elseif ($this->isMySQL()) {
+            $baseDSN .= ';charset=utf8mb4';
+        }
+
+        return $baseDSN;
     }
 
-    /**
-     * Подключение к конкретной схеме
-     */
-    public static function getPdoForSchema(string $schema): OperationOutcome
+    private function isPostgreSQL(): bool
     {
-        $driver = $_ENV['DB_DRIVER'] ?? 'pgsql';
-        $host = $_ENV['DB_HOST'] ?? 'localhost';
-        $port = $_ENV['DB_PORT'] ?? ($driver === 'mysql' ? 3306 : 5432);
-        $user = $_ENV['DB_USER'] ?? 'root';
-        $password = $_ENV['DB_PASSWORD'] ?? '';
-        $dbname = $_ENV['DB_NAME'];
+        return $this->driver === 'pgsql';
+    }
 
-        // MySQL: используем как отдельную БД: rift_system
-        // PostgreSQL: тот же DB_NAME, но переключаем schema search_path
-        $dsn = match ($driver) {
-            'mysql' => "mysql:host={$host};port={$port};dbname={$dbname}_{$schema};charset=utf8mb4",
-            'pgsql' => "pgsql:host={$host};port={$port};dbname={$dbname};options=--search_path={$schema}",
+    private function isMySQL(): bool
+    {
+        return $this->driver === 'mysql';
+    }
+
+    private static function getDefaultPort(string $driver): int
+    {
+        return match ($driver) {
+            'mysql' => 3306,
+            'pgsql' => 5432,
+            default => throw new \InvalidArgumentException("Unsupported database driver: {$driver}")
         };
-
-        try {
-            $pdo = new PDO($dsn, $user, $password, [
-                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            ]);
-
-            return Operation::success($pdo);
-        } catch (\PDOException $e) {
-            return Operation::error(Operation::HTTP_INTERNAL_SERVER_ERROR, "Schema connection failed", [
-                'schema' => $schema,
-                'error' => $e->getMessage()
-            ]);
-        }
     }
 }

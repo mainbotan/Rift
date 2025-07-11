@@ -5,9 +5,11 @@ use DI\Container;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 use Psr\Log\LoggerInterface;
-use Rift\Contracts\Http\ResponseEmitter\EmitterInterface;
-use Rift\Contracts\Http\Router\RouterInterface;
+use Rift\Contracts\Database\Bridge\PDO\ConnectorInterface;
+use Rift\Contracts\Database\Configurators\ConfiguratorInterface;
 use Rift\Contracts\Http\RoutesBox\RoutesBoxInterface;
+use Rift\Core\Database\Bridge\PDO\Connector;
+use Rift\Core\Database\Configurators\Configurator;
 use Rift\Core\Http\ResponseEmitters\CompositeEmitter;
 use Rift\Core\Http\ResponseEmitters\JsonEmitter;
 use Rift\Core\Http\ResponseEmitters\XmlEmitter;
@@ -45,6 +47,20 @@ return [
     ContainerInterface::class => function (Container $container) {
         return $container;
     },
+
+    // PDO Connector
+    ConnectorInterface::class => get(Connector::class),
+    Connector::class => autowire()
+        ->constructorParameter('driver', $_ENV['DB_DRIVER'])
+        ->constructorParameter('host', $_ENV['DB_HOST'])
+        ->constructorParameter('port', (int) $_ENV['DB_PORT'])
+        ->constructorParameter('username', $_ENV['DB_USER'])
+        ->constructorParameter('password', $_ENV['DB_PASSWORD'])
+        ->constructorParameter('defaultDatabase', $_ENV['DB_NAME']),
+
+    // Schemas configurator
+    ConfiguratorInterface::class => get(Configurator::class),
+    Configurator::class => autowire(),
 
     /**
      * |

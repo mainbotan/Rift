@@ -5,7 +5,7 @@
  * |
  * This file is a component of the Rift Miniframework core <v 1.0.0>
  * |
- * Initialization of the tenant scheme.
+ * Initialization of the scheme with tables.
  * |
  * |--------------------------------------------------------------------------
  */
@@ -13,69 +13,163 @@
 
 namespace Rift\Core\Database\Configurators;
 
+
+use PDO;
+use PDOException;
 use Rift\Core\Databus\Operation;
 use Rift\Core\Databus\OperationOutcome;
-use Rift\Core\Database\Connect;
+use Rift\Contracts\Database\Bridge\PDO\ConnectorInterface;
+use Rift\Contracts\Database\Configurators\ConfiguratorInterface;
 
-class Configurator
+final class Configurator implements ConfiguratorInterface
 {
-    protected static array $models = [];
-    protected static string $tenantId;
+    private static array $tenantModels = [];
+    private static array $systemModels = [];
 
-    public static function forTenant(string $tenantId): self
+    private string $targetSchema;
+    private bool $isSystemSchema = false;
+    private bool $skipSchemaCreation = false;
+
+    public function __construct(
+        private ConnectorInterface $connector
+    ) {}
+
+    public static function registerTenantModel(string $modelClass): void
     {
-        static::$tenantId = $tenantId;
-        return new static();
+        self::validateModel($modelClass);
+        self::$tenantModels[$modelClass] = $modelClass;
     }
 
-    public static function configure(): OperationOutcome
+    public static function registerSystemModel(string $modelClass): void
     {
-        if (static::$tenantId === 'system') {
-            return Operation::error(Operation::HTTP_BAD_REQUEST, 'The "system" scheme is reserved by Rift');
+        self::validateModel($modelClass);
+        self::$systemModels[$modelClass] = $modelClass;
+    }
+
+    public function forTenant(string $tenantId, string $prefix = 'tenant_'): self
+    {
+        if ($tenantId === 'system') {
+            throw new \InvalidArgumentException(
+                'Use forSystem() method to configure system schema'
+            );
         }
 
-        $schema = 'tenant_' . static::$tenantId;
+        $this->targetSchema = $prefix . $tenantId;
+        $this->isSystemSchema = false;
+        return $this;
+    }
 
-        // 1. Получаем admin подключение
-        $adminPdoRequest = Connect::adminPdo();
-        if ($adminPdoRequest->code !== Operation::HTTP_OK) {
-            return $adminPdoRequest;
+    public function forSystem(): self
+    {
+        $this->targetSchema = 'system';
+        $this->isSystemSchema = true;
+        return $this;
+    }
+
+    public function skipSchemaCreation(): self
+    {
+        $this->skipSchemaCreation = true;
+        return $this;
+    }
+
+    public function configure(): OperationOutcome
+    {
+        if (empty($this->targetSchema)) {
+            return Operation::error(
+                Operation::HTTP_BAD_REQUEST,
+                'Schema must be specified'
+            );
         }
-        $adminPdo = $adminPdoRequest->result;
 
-        // 2. Создаем схему или БД для тенанта
         try {
-            if ($_ENV['DB_DRIVER'] === 'pgsql') {
-                $adminPdo->exec("CREATE SCHEMA IF NOT EXISTS {$schema}");
-            } elseif ($_ENV['DB_DRIVER'] === 'mysql') {
-                $adminPdo->exec("CREATE DATABASE IF NOT EXISTS {$_ENV['DB_NAME']}_{$schema}");
+            $models = $this->isSystemSchema ? self::$systemModels : self::$tenantModels;
+
+            // 1. Создаем схему (если не пропущено)
+            if (!$this->skipSchemaCreation) {
+                $this->createSchema($this->targetSchema);
             }
-        } catch (\PDOException $e) {
-            return Operation::error(500, "Failed to create tenant schema", [
-                'tenant' => static::$tenantId,
-                'error' => $e->getMessage()
-            ]);
+
+            // 2. Накатываем миграции
+            return $this->migrateModels($this->targetSchema, $models);
+
+        } catch (PDOException $e) {
+            return Operation::error(
+                Operation::HTTP_INTERNAL_SERVER_ERROR,
+                "Schema configuration failed for '{$this->targetSchema}'",
+                [
+                    'error' => $e->getMessage(),
+                    'schema' => $this->targetSchema,
+                    'is_system' => $this->isSystemSchema
+                ]
+            );
+        }
+    }
+
+    private static function validateModel(string $modelClass): void
+    {
+        if (!method_exists($modelClass, 'getMigrationSQL')) {
+            throw new \RuntimeException(
+                "Model {$modelClass} must implement getMigrationSQL() method"
+            );
+        }
+    }
+
+    private function createSchema(string $schema): void
+    {
+        $adminConnection = $this->connector->createAdminConnection();
+        
+        if (!$adminConnection->isSuccess()) {
+            throw new PDOException(
+                $adminConnection->error ?? 'Admin connection failed'
+            );
         }
 
-        // 3. Подключаемся к схеме/базе тенанта
-        $tenantPdoRequest = Connect::getPdoForSchema($schema);
-        if ($tenantPdoRequest->code !== Operation::HTTP_OK) {
-            return $tenantPdoRequest;
-        }
-        $tenantPdo = $tenantPdoRequest->result;
+        $adminPdo = $adminConnection->result;
+        $driver = $_ENV['DB_DRIVER'] ?? 'pgsql';
 
-        // 4. Создаем таблицы моделей
-        foreach (static::$models as $model) {
+        $sql = match ($driver) {
+            'pgsql' => "CREATE SCHEMA IF NOT EXISTS {$schema}",
+            'mysql' => "CREATE DATABASE IF NOT EXISTS {$_ENV['DB_NAME']}_{$schema}",
+            default => throw new \RuntimeException("Unsupported DB driver: {$driver}")
+        };
+
+        $adminPdo->exec($sql);
+    }
+
+    private function migrateModels(string $schema, array $models): OperationOutcome
+    {
+        if (empty($models)) {
+            return Operation::success(
+                "No models to migrate for schema '{$schema}'"
+            );
+        }
+
+        $connection = $this->connector->createSchemaConnection($schema);
+        
+        if (!$connection->isSuccess()) {
+            return $connection;
+        }
+
+        $pdo = $connection->result;
+
+        foreach ($models as $model) {
             try {
-                $tenantPdo->exec($model::getMigrationSQL($schema));
-            } catch (\PDOException $e) {
-                return Operation::error(Operation::HTTP_INTERNAL_SERVER_ERROR, "Failed to create table for model: " . $model, [
-                    'tenant' => static::$tenantId,
-                    'error' => $e->getMessage()
-                ]);
+                $pdo->exec($model::getMigrationSQL($schema));
+            } catch (PDOException $e) {
+                return Operation::error(
+                    Operation::HTTP_INTERNAL_SERVER_ERROR,
+                    "Migration failed for model: {$model}",
+                    [
+                        'model' => $model,
+                        'error' => $e->getMessage(),
+                        'schema' => $schema
+                    ]
+                );
             }
         }
 
-        return Operation::success("Tenant " . static::$tenantId . " configured successfully");
+        return Operation::success(
+            "Schema '{$schema}' configured with " . count($models) . " models"
+        );
     }
 }

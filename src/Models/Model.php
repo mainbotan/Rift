@@ -15,9 +15,9 @@ namespace Rift\Core\Models;
 use Rift\Contracts\Models\ModelInterface;
 use Rift\Core\Databus\Operation;
 use Rift\Core\Databus\OperationOutcome;
-use Rift\Core\Validators\Utils\SchemaValidator;
+use Rift\Validator\SchemaValidator;
 
-abstract class Model extends Operation implements ModelInterface
+abstract class Model implements ModelInterface
 {
     abstract public static function getSchema(): array;
 
@@ -45,7 +45,7 @@ abstract class Model extends Operation implements ModelInterface
     {
         $schema = static::getSchema();
         if (!isset($schema[$field])) {
-            return self::error(self::HTTP_BAD_REQUEST, "Field {$field} not defined in model");
+            return Operation::error(Operation::HTTP_BAD_REQUEST, "Field {$field} not defined in model");
         }
         
         return SchemaValidator::validate([$field => $schema[$field]], [$field => $value]);
@@ -145,10 +145,10 @@ abstract class Model extends Operation implements ModelInterface
     {
         foreach (static::getForeignKeys() as $fk) {
             if (empty($fk['reference_table'])) {
-                return self::error(500, "Missing reference_table in foreign key");
+                return Operation::error(Operation::HTTP_INTERNAL_SERVER_ERROR, "Missing reference_table in foreign key");
             }
         }
         
-        return self::success(null);
+        return Operation::success(null);
     }
 }

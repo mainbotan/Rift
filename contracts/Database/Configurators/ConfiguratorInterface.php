@@ -10,5 +10,15 @@ interface ConfiguratorInterface {
      * configure database schema
      * @return OperationOutcome
      */
-    public static function configure(): OperationOutcome;
+    public function configure(): OperationOutcome;
+
+    public static function registerTenantModel(string $modelClass): void;
+
+    public static function registerSystemModel(string $modelClass): void;
+
+    public function forTenant(string $tenantId, string $prefix = 'tenant_'): self;
+
+    public function forSystem(): self;
+
+    public function skipSchemaCreation(): self;
 }

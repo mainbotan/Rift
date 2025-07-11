@@ -17,9 +17,24 @@ use Rift\Contracts\Http\RoutesBox\RoutesBoxInterface;
 use Rift\Core\Databus\Operation;
 use Rift\Core\Databus\OperationOutcome;
 
+/**
+ * @package Rift\Core\Http\Router
+ * @version 1.0.0
+ * @author mainbotan
+ * @license MIT
+ */
 class Router implements RouterInterface
 {
+    /** @var array<array{
+     * method: string, 
+     * path: string, 
+     * regex: string, 
+     * paramNames: string[], 
+     * middlewares: string[], 
+     * handler: string
+     * }> */
     private array $compiledRoutes = [];
+
     private array $routes = [];
     
     public function __construct(
@@ -29,7 +44,11 @@ class Router implements RouterInterface
         $this->routes = $routesBox->getRoutes();
         $this->compileRoutes();
     }
-
+    
+    /**
+     * @param ServerRequestInterface $request
+     * @return OperationOutcome 
+     */
     public function execute(ServerRequestInterface $request): OperationOutcome
     {
         $path = $request->getUri()->getPath();
@@ -54,16 +73,19 @@ class Router implements RouterInterface
             }
 
             // Route handler execution
-            return $this->executeHandler($route['handler'], $request);
+            return $this->dispatchToHandler($route['handler'], $request);
         }
 
         return Operation::error(Operation::HTTP_NOT_FOUND, 'Path not found');
     }
 
+    /**
+     * @return void
+     */
     private function compileRoutes(): void
     {
         foreach ($this->routes as $route) {
-            [$regex, $paramNames] = $this->parseRoute($route['path']);
+            [$regex, $paramNames] = $this->compileRoutePattern($route['path']);
             
             $this->compiledRoutes[] = [
                 'method' => strtoupper($route['method']),
@@ -76,7 +98,11 @@ class Router implements RouterInterface
         }
     }
 
-    private function parseRoute(string $route): array
+    /**
+     * @param string $route
+     * @return array
+     */
+    private function compileRoutePattern(string $route): array
     {
         $paramNames = [];
         $regex = preg_replace_callback(
@@ -91,15 +117,12 @@ class Router implements RouterInterface
         return ['#^'.$regex.'$#', $paramNames];
     }
 
-    private function extractRouteParams(array $paramNames, array $matches): array
-    {
-        $params = [];
-        foreach ($paramNames as $name) {
-            $params[$name] = $matches[$name] ?? null;
-        }
-        return $params;
-    }
-
+    /**
+     * Middlewares chain processing
+     * @param array @middlewares
+     * @param ServerRequestInterface $request
+     * @return OperationOutcome @result
+     */
     private function processMiddlewares(array $middlewares, ServerRequestInterface $request): OperationOutcome
     {
         foreach ($middlewares as $middleware) {
@@ -118,7 +141,16 @@ class Router implements RouterInterface
         return Operation::success($request);
     }
 
-    private function executeHandler(string $handler, ServerRequestInterface $request): OperationOutcome
+    /**
+     * The handler instance is taken from
+     * the di-container passed when the router
+     * is declared.
+     * 
+     * @param string $handler - Link to handler class
+     * @param ServerRequestInterface $request
+     * @return OperationOutcome
+     */
+    private function dispatchToHandler(string $handler, ServerRequestInterface $request): OperationOutcome
     {
         if (empty($handler)) {
             return Operation::error(Operation::HTTP_INTERNAL_SERVER_ERROR, 'Path handler not found');

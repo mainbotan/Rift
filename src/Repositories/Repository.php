@@ -15,18 +15,22 @@ namespace Rift\Core\Repositories;
 use PDO;
 use PDOStatement;
 use PDOException;
+use Rift\Contracts\Models\ModelInterface;
 use Rift\Core\Databus\Operation;
 use Rift\Core\Databus\OperationOutcome;
 
-abstract class Repository extends Operation
+abstract class Repository
 {
     public function __construct(
         protected PDO $pdo,
-        public object $model
+        public ModelInterface $model
     ) {}
 
     /**
-     * Универсальный метод выполнения запросов
+     * Universal query execution method
+     * 
+     * @param PDOStatement $stmt
+     * @return OperationOutcome $result
      */
     protected function executeQuery(PDOStatement $stmt): OperationOutcome
     {
@@ -41,7 +45,10 @@ abstract class Repository extends Operation
     }
 
     /**
-     * Определяет тип ответа на основе выполненного запроса
+     * Determines the response type based on the request made
+     * 
+     * @param PDOStatement $stmt
+     * @return OperationOutcome $result
      */
     private function determineOperation(PDOStatement $stmt): OperationOutcome
     {
@@ -55,38 +62,43 @@ abstract class Repository extends Operation
         };
     }
 
+    // SELECT
     private function prepareSelectOperation(PDOStatement $stmt): OperationOutcome
     {
-        return self::success($stmt->fetchAll(PDO::FETCH_ASSOC));
+        return Operation::success($stmt->fetchAll(PDO::FETCH_ASSOC));
     }
 
+    // INSERT
     private function prepareInsertOperation(PDOStatement $stmt): OperationOutcome
     {
-        return self::success([
+        return Operation::success([
             'insert_id' => $this->pdo->lastInsertId(),
             'affected_rows' => $stmt->rowCount()
         ]);
     }
 
+    // MODIFICATION
     private function prepareModificationOperation(PDOStatement $stmt): OperationOutcome
     {
-        return self::success([
+        return Operation::success([
             'affected_rows' => $stmt->rowCount()
         ]);
     }
 
+    // GENERIC
     private function prepareGenericOperation(PDOStatement $stmt): OperationOutcome
     {
-        return self::success([
+        return Operation::success([
             'executed' => true,
             'affected_rows' => $stmt->rowCount()
         ]);
     }
 
+    // ERRPR
     private function prepareErrorOperation(PDOStatement $stmt, PDOException $e): OperationOutcome
     {
-        return self::error(
-            self::HTTP_INTERNAL_SERVER_ERROR,
+        return Operation::error(
+            Operation::HTTP_INTERNAL_SERVER_ERROR,
             'Database error: ' . $e->getMessage(),
             [
                 'query' => $stmt->queryString,

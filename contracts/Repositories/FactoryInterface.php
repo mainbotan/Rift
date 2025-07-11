@@ -5,18 +5,15 @@
  * |
  * This file is a component of the Rift Miniframework core <v 1.0.0>
  * |
- * Repository Interface.
+ * Repositories factory interface.
  * |
  * |--------------------------------------------------------------------------
  */
 
 namespace Rift\Contracts\Repositories;
 
-use Rift\Core\Databus\OperationOutcome;
+use PDO;
 
-
-interface RepositoryInterface {
-    /**
-     * 404 )
-     */
+interface FactoryInterface {
+    public function __construct(PDO $pdo);
 }

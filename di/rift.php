@@ -2,6 +2,9 @@
 
 use Psr\Container\ContainerInterface;
 use DI\Container;
+use Monolog\Handler\StreamHandler;
+use Monolog\Logger;
+use Psr\Log\LoggerInterface;
 use Rift\Contracts\Http\ResponseEmitter\EmitterInterface;
 use Rift\Contracts\Http\Router\RouterInterface;
 use Rift\Contracts\Http\RoutesBox\RoutesBoxInterface;
@@ -10,11 +13,18 @@ use Rift\Core\Http\ResponseEmitters\JsonEmitter;
 use Rift\Core\Http\ResponseEmitters\XmlEmitter;
 use Rift\Core\Http\ResponseEmitters\TextEmitter;
 use Rift\Core\Http\Router\Router;
+use Symfony\Component\Stopwatch\Stopwatch;
 
 use function DI\autowire;
 use function DI\get;
 
 return [
+    /**
+     * |
+     * Critical dependencies
+     * | 
+     */
+
     // Response Emitters
     CompositeEmitter::class => autowire()
         ->constructorParameter('emitters', [
@@ -35,4 +45,20 @@ return [
     ContainerInterface::class => function (Container $container) {
         return $container;
     },
+
+    /**
+     * |
+     * Additional services
+     * |
+     */
+
+    // Monolog (PSR-3 Logger)
+    LoggerInterface::class => function () {
+        $logger = new Logger($_ENV['LOGGER_APP_NAME']);
+        $logger->pushHandler(new StreamHandler($_ENV['LOGGER_DIR'], Logger::DEBUG));
+        return $logger;
+    },
+
+    // Symfony Stopwatch
+    Stopwatch::class => autowire()
 ];

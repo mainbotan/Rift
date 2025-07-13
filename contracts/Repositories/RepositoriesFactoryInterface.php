@@ -12,6 +12,6 @@ namespace Rift\Contracts\Repositories;
 
 use PDO;
 
-interface FactoryInterface {
+interface RepositoriesFactoryInterface {
     public function __construct(PDO $pdo);
 }

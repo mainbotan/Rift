@@ -1,5 +1,6 @@
 <?php
-namespace Rift\Core\Crypto\Modules;
+
+namespace Rift\Crypto;
 
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;

@@ -1,10 +1,10 @@
 <?php
-namespace Rift\Core\Crypto\Modules;
+namespace Rift\Crypto;
 
 use Rift\Core\Databus\Operation;
 use Rift\Core\Databus\OperationOutcome;
 
-class TokenGenerator
+class GeneratorManager
 {
     public function __construct(
         private int $csrfLength = 32,

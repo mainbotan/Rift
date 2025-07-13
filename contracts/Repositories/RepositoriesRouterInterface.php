@@ -4,14 +4,16 @@
  * |
  * This file is a component of the Rift Miniframework core <v 1.0.0>
  * |
- * Repositories factory interface.
+ * Repositories router interface.
  * |
  * |--------------------------------------------------------------------------
  */
 namespace Rift\Contracts\Repositories;
 
-use PDO;
+use Rift\Contracts\Database\Bridge\PDO\ConnectorInterface;
+use Rift\Core\Databus\OperationOutcome;
 
-interface FactoryInterface {
-    public function __construct(PDO $pdo);
+interface RepositoriesRouterInterface {
+    public function __construct(ConnectorInterface $connector);
+    public function factory(): OperationOutcome;
 }

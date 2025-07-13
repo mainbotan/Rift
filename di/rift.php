@@ -24,6 +24,10 @@ use Rift\Core\Http\ResponseEmitters\JsonEmitter;
 use Rift\Core\Http\ResponseEmitters\XmlEmitter;
 use Rift\Core\Http\ResponseEmitters\TextEmitter;
 use Rift\Core\Http\Router\Router;
+use Rift\Crypto\HashManager;
+use Rift\Crypto\JwtManager;
+use Rift\Crypto\UidManager;
+use Rift\Metrics\Stopwatch\StopwatchManager;
 use Symfony\Component\Stopwatch\Stopwatch;
 
 use function DI\autowire;
@@ -76,6 +80,27 @@ return [
      * Additional services
      * |
      */
+
+    // Symfony Stopwatch Manager
+    StopwatchManager::class => autowire(),
+
+    // JWT Manager
+    JwtManager::class => autowire()
+        ->constructorParameter('secretKey', $_ENV['JWT_MANAGER_KEY'])
+        ->constructorParameter('defaultTtl', 3600)
+        ->constructorParameter('algorithm', 'HS256'),
+
+    // UID Manager
+    UidManager::class => autowire(),
+
+    // Hash Manager
+    HashManager::class => autowire()
+        ->constructorParameter('algorithm', PASSWORD_ARGON2I)
+        ->constructorParameter('options', [
+            'memory_cost' => 1 << 16, 
+            'time_cost'   => 4,
+            'threads'     => 2
+        ]),
 
     // Monolog (PSR-3 Logger)
     LoggerInterface::class => function () {

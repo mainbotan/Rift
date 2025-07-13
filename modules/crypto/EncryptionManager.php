@@ -1,5 +1,5 @@
 <?php
-namespace Rift\Core\Crypto\Modules;
+namespace Rift\Crypto;
 
 use Rift\Core\Databus\Operation;
 use Rift\Core\Databus\OperationOutcome;

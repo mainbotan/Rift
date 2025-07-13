@@ -1,8 +1,8 @@
 <?php
 
-namespace Rift\Core\Crypto\Modules;
+namespace Rift\Crypto;
 
-class UUID {
+class UidManager {
 
     public static function generate(): string {
         $uuid = bin2hex(random_bytes(8));

@@ -27,6 +27,7 @@ use Rift\Core\Http\Router\Router;
 use Rift\Crypto\HashManager;
 use Rift\Crypto\JwtManager;
 use Rift\Crypto\UidManager;
+use Rift\Metrics\Stopwatch\StopwatchManager;
 use Symfony\Component\Stopwatch\Stopwatch;
 
 use function DI\autowire;
@@ -80,6 +81,9 @@ return [
      * |
      */
 
+    // Symfony Stopwatch Manager
+    StopwatchManager::class => autowire(),
+
     // JWT Manager
     JwtManager::class => autowire()
         ->constructorParameter('secretKey', $_ENV['JWT_MANAGER_KEY'])
@@ -91,7 +95,7 @@ return [
 
     // Hash Manager
     HashManager::class => autowire()
-        ->constructorParameter('key', $_ENV['HASH_MANAGER_KEY'])
+        ->constructorParameter('algorithm', PASSWORD_ARGON2I)
         ->constructorParameter('options', [
             'memory_cost' => 1 << 16, 
             'time_cost'   => 4,

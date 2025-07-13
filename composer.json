@@ -9,7 +9,8 @@
       "Rift\\Contracts\\": "contracts/",
       "Rift\\Console\\": "console/",
       "Rift\\Validator\\": "modules/validator/",
-      "Rift\\Crypto\\": "modules/crypto/"
+      "Rift\\Crypto\\": "modules/crypto/",
+      "Rift\\Metrics\\": "modules/metrics/"
     }
   },
   "autoload-dev": {

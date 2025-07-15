@@ -3,10 +3,11 @@
 namespace Rift\Core\Cache\Redis;
 
 use Predis\ClientInterface;
+use Rift\Contracts\Cache\CacheInterface;
 use Rift\Core\Databus\Operation;
 use Rift\Core\Databus\OperationOutcome;
 
-class RedisCacheService
+class RedisCacheService implements CacheInterface
 {
     public function __construct(
         private ClientInterface $redis

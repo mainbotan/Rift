@@ -3,12 +3,16 @@
 namespace Rift\Core\Http\RateLimiter;
 
 use Psr\Http\Message\ServerRequestInterface;
+use Rift\Contracts\Cache\CacheInterface;
 use Rift\Contracts\Middlewares\MiddlewareInterface;
 use Rift\Core\Databus\Operation;
 use Rift\Core\Databus\OperationOutcome;
 use Rift\Core\Http\Request;
 
 class RateLimitMiddleware implements MiddlewareInterface {
+    public function __construct(
+        private CacheInterface $cache
+    ){ }
 
     public function execute(ServerRequestInterface $request): OperationOutcome
     {
@@ -19,6 +23,9 @@ class RateLimitMiddleware implements MiddlewareInterface {
         }
         $limitData = $route['limit'];
         $clientKey = $this->getClientKey($request, $limitData['strategy']);
+
+        var_dump($clientKey);
+        var_dump($this->cache->get($clientKey));
         return Operation::success(null);
     }
 

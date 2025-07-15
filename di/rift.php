@@ -95,7 +95,7 @@ return [
             'host' => $_ENV['REDIS_HOST'] ?? 'redis',
             'port' => (int) ($_ENV['REDIS_PORT'] ?? 6379),
             'password' => $_ENV['REDIS_PASSWORD'] ?? null,
-            'database' => (int) ($_ENV['REDIS_DATABASE'] ?? 0),
+            'database' => (int) ($_ENV['REDIS_DB'] ?? 0),
             'timeout' => (float) ($_ENV['REDIS_TIMEOUT'] ?? 1.0),
         ])
         ->constructorParameter('options', null),

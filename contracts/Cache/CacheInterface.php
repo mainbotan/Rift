@@ -1,6 +1,6 @@
 <?php
 
-namespace Rift\Contracts\Cache\CacheInterface;
+namespace Rift\Contracts\Cache;
 
 use Rift\Core\Databus\OperationOutcome;
 

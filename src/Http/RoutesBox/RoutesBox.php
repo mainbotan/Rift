@@ -18,6 +18,7 @@ class RoutesBox implements RoutesBoxInterface {
     protected array $routes = [];
     protected array $groupStack = [];
     protected ?array $pendingMiddlewares = null;
+    protected ?array $pendingLimit = null;
 
     public function get(string $path, string $handler): self {
         return $this->addRoute('GET', $path, $handler);
@@ -39,23 +40,43 @@ class RoutesBox implements RoutesBoxInterface {
         return $this->addRoute('DELETE', $path, $handler);
     }
 
-    public function group(string $prefix, callable $callback): self {
-        // Сохраняем текущий стек middleware
-        $previousMiddlewares = $this->pendingMiddlewares;
-        
-        $this->groupStack[] = [
-            'prefix' => $prefix,
-            'middlewares' => $this->pendingMiddlewares ?? []
-        ];
-        
-        $this->pendingMiddlewares = null;
-        $callback($this);
-        array_pop($this->groupStack);
-        
-        // Восстанавливаем предыдущие middleware
-        $this->pendingMiddlewares = $previousMiddlewares;
+    public function limit(int $maxAttempts, int $interval = 3600, string $strategy = 'ip+agent'): self
+    {
+        // Если есть маршруты, применяем к последнему
+        if (!empty($this->routes)) {
+            $lastIndex = count($this->routes) - 1;
+            $this->routes[$lastIndex]['limit'] = [
+                'max_attempts' => $maxAttempts,
+                'interval' => $interval,
+                'strategy' => $strategy
+            ];
+        } else {
+            // Иначе сохраняем как pending для следующего маршрута
+            $this->pendingLimit = [
+                'max_attempts' => $maxAttempts,
+                'interval' => $interval,
+                'strategy' => $strategy
+            ];
+        }
         
         return $this;
+    }
+
+    protected function resolveLimit(): ?array
+    {
+        // Если есть локальный лимит - используем его
+        if ($this->pendingLimit !== null) {
+            return $this->pendingLimit;
+        }
+        
+        // Ищем последний лимит в группах
+        foreach (array_reverse($this->groupStack) as $group) {
+            if (isset($group['limit'])) {
+                return $group['limit'];
+            }
+        }
+        
+        return null;
     }
 
     protected function addRoute(string $method, string $path, string $handler): self {
@@ -63,10 +84,33 @@ class RoutesBox implements RoutesBoxInterface {
             'method' => $method,
             'path' => $this->applyGroupPrefix($path),
             'handler' => $handler,
-            'middlewares' => $this->resolveMiddlewares()
+            'middlewares' => $this->resolveMiddlewares(),
+            'limit' => $this->resolveLimit()
         ];
         
         $this->routes[] = $route;
+        $this->pendingLimit = null;
+        
+        return $this;
+    }
+
+    public function group(string $prefix, callable $callback): self {
+        $previousMiddlewares = $this->pendingMiddlewares;
+        $previousLimit = $this->pendingLimit;
+        
+        $this->groupStack[] = [
+            'prefix' => $prefix,
+            'middlewares' => $this->pendingMiddlewares ?? [],
+            'limit' => $this->pendingLimit
+        ];
+        
+        $this->pendingMiddlewares = null;
+        $this->pendingLimit = null;
+        $callback($this);
+        array_pop($this->groupStack);
+        
+        $this->pendingMiddlewares = $previousMiddlewares;
+        $this->pendingLimit = $previousLimit;
         
         return $this;
     }

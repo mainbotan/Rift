@@ -4,11 +4,12 @@ namespace Rift\Crypto;
 use Rift\Core\Databus\Operation;
 use Rift\Core\Databus\OperationOutcome;
 
-class DataEncryptor
+class EncryptionManager
 {
     public function __construct(
         private string $cipher = 'AES-256-CBC',
-        private string $keyDerivation = 'sha256'
+        private string $keyDerivation = 'sha256',
+        private string $key
     ) {
         if (!in_array($this->cipher, openssl_get_cipher_methods())) {
             return Operation::error(
@@ -18,8 +19,9 @@ class DataEncryptor
         }
     }
 
-    public function encrypt(string $data, string $key): OperationOutcome
+    public function encrypt(string $data): OperationOutcome
     {
+        $key = $this->key;
         if (strlen($key) < 32) {
             return Operation::error(
                 Operation::HTTP_BAD_REQUEST,
@@ -51,8 +53,9 @@ class DataEncryptor
         }
     }
 
-    public function decrypt(string $encrypted, string $key): OperationOutcome
+    public function decrypt(string $encrypted): OperationOutcome
     {
+        $key = $this->key;
         try {
             $data = base64_decode($encrypted);
             $ivLength = openssl_cipher_iv_length($this->cipher);

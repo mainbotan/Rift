@@ -32,6 +32,7 @@ class Router implements RouterInterface
      * paramNames: string[], 
      * middlewares: string[], 
      * handler: string
+     * limit: []
      * }> */
     private array $compiledRoutes = [];
 
@@ -63,6 +64,8 @@ class Router implements RouterInterface
                 continue;
             }
 
+            $request = $request->withAttribute('route', $route);
+            
             // Middleware processing
             if (!empty($route['middlewares'])) {
                 $middlewareResult = $this->processMiddlewares($route['middlewares'], $request);
@@ -93,7 +96,8 @@ class Router implements RouterInterface
                 'regex' => $regex,
                 'paramNames' => $paramNames,
                 'middlewares' => $route['middlewares'] ?? [],
-                'handler' => $route['handler']
+                'handler' => $route['handler'],
+                'limit' => $route['limit'] ?? []
             ];
         }
     }

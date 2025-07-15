@@ -13,10 +13,13 @@ use Psr\Container\ContainerInterface;
 use DI\Container;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
+use Predis\Client;
+use Predis\ClientInterface;
 use Psr\Log\LoggerInterface;
 use Rift\Contracts\Database\Bridge\PDO\ConnectorInterface;
 use Rift\Contracts\Database\Configurators\ConfiguratorInterface;
 use Rift\Contracts\Http\RoutesBox\RoutesBoxInterface;
+use Rift\Core\Cache\Redis\RedisCacheService;
 use Rift\Core\Database\Bridge\PDO\Connector;
 use Rift\Core\Database\Configurators\Configurator;
 use Rift\Core\Http\ResponseEmitters\CompositeEmitter;
@@ -81,6 +84,21 @@ return [
      * Additional services
      * |
      */
+
+    // Redis
+    RedisCacheService::class => autowire(),
+    ClientInterface::class => get(Client::class),
+
+    Client::class => autowire()
+        ->constructorParameter('parameters', [
+            'scheme' => 'tcp',
+            'host' => $_ENV['REDIS_HOST'] ?? 'redis',
+            'port' => (int) ($_ENV['REDIS_PORT'] ?? 6379),
+            'password' => $_ENV['REDIS_PASSWORD'] ?? null,
+            'database' => (int) ($_ENV['REDIS_DATABASE'] ?? 0),
+            'timeout' => (float) ($_ENV['REDIS_TIMEOUT'] ?? 1.0),
+        ])
+        ->constructorParameter('options', null),
 
     // Symfony Stopwatch Manager
     StopwatchManager::class => autowire(),

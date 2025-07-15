@@ -52,7 +52,6 @@ class Router implements RouterInterface
      */
     public function execute(ServerRequestInterface $request): OperationOutcome
     {
-        var_dump($this->routes);
         $path = $request->getUri()->getPath();
         $method = strtoupper($request->getMethod());
         
@@ -66,7 +65,7 @@ class Router implements RouterInterface
             }
 
             $request = $request->withAttribute('route', $route);
-            var_dump($route);
+            
             // Middleware processing
             if (!empty($route['middlewares'])) {
                 $middlewareResult = $this->processMiddlewares($route['middlewares'], $request);

@@ -64,8 +64,19 @@ class Router implements RouterInterface
                 continue;
             }
 
-            $request = $request->withAttribute('route', $route);
-            
+            // Извлекаем параметры из URL (например, `uid` из `/clients/{uid}`)
+            $params = [];
+            foreach ($route['paramNames'] as $name) {
+                if (isset($matches[$name])) {
+                    $params[$name] = $matches[$name];
+                }
+            }
+
+            // Добавляем параметры в $request
+            $request = $request
+                ->withAttribute('route', $route)
+                ->withAttribute('params', $params); // <-- Новый атрибут
+
             // Middleware processing
             if (!empty($route['middlewares'])) {
                 $middlewareResult = $this->processMiddlewares($route['middlewares'], $request);

@@ -15,5 +15,4 @@ use Rift\Core\Databus\OperationOutcome;
 
 interface RepositoriesRouterInterface {
     public function __construct(ConnectorInterface $connector);
-    public function factory(): OperationOutcome;
 }

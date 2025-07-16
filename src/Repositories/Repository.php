@@ -104,4 +104,56 @@ abstract class Repository
             ]
         );
     }
+
+
+    /**
+     * Generates an UPDATE request based on the data.
+     * 
+     * @param array $data Data to update (keys = field names).
+     * @param array $where The WHERE conditions
+     */
+    protected function buildUpdateQuery(array $data, array $where): OperationOutcome 
+    {
+        $table = $this->model::getTableName();
+
+        $filteredData = array_filter($data, fn($value) => $value !== null);
+        if (empty($filteredData)) {
+            return Operation::error(Operation::HTTP_BAD_REQUEST, "No fields to update.");
+        }
+        $setParts = [];
+        foreach (array_keys($filteredData) as $field) {
+            $setParts[] = "{$field} = :{$field}";
+        }
+        $setClause = implode(', ', $setParts);
+
+        $whereParts = [];
+        foreach ($where as $field => $value) {
+            $whereParts[] = "{$field} = :where_{$field}";
+        }
+        $whereClause = implode(' AND ', $whereParts);
+
+        $sql = "UPDATE {$table} SET {$setClause} WHERE {$whereClause}";
+        $stmt = $this->pdo->prepare($sql);
+
+        foreach ($filteredData as $field => $value) {
+            $stmt->bindValue(":{$field}", $value, $this->getParamType($value));
+        }
+
+        foreach ($where as $field => $value) {
+            $stmt->bindValue(":where_{$field}", $value, $this->getParamType($value));
+        }
+
+        return Operation::success($stmt);
+    }
+
+    private function getParamType($value): int 
+    {
+        return match (true) {
+            is_int($value) => \PDO::PARAM_INT,
+            is_bool($value) => \PDO::PARAM_BOOL,
+            is_null($value) => \PDO::PARAM_NULL,
+            default => \PDO::PARAM_STR,
+        };
+    }
+
 }

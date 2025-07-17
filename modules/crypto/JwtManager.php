@@ -64,4 +64,40 @@ class JwtManager
             return Operation::error(Operation::HTTP_INTERNAL_SERVER_ERROR, $e->getMessage());
         }
     }
+
+    public function checkExpiration(array $decodedToken): OperationOutcome
+    {
+        try {
+            if (!isset($decodedToken['exp'])) {
+                return Operation::error(
+                    Operation::HTTP_BAD_REQUEST,
+                    'Token does not contain expiration time'
+                );
+            }
+
+            $currentTime = time();
+            $expirationTime = $decodedToken['exp'];
+
+            if ($currentTime > $expirationTime) {
+                return Operation::error(
+                    Operation::HTTP_UNAUTHORIZED,
+                    'Token has expired',
+                    ['expired_at' => $expirationTime]
+                );
+            }
+
+            $remainingTime = $expirationTime - $currentTime;
+
+            return Operation::success([
+                'is_valid' => true,
+                'remaining_seconds' => $remainingTime,
+                'expires_at' => $expirationTime
+            ]);
+        } catch (\Exception $e) {
+            return Operation::error(
+                Operation::HTTP_INTERNAL_SERVER_ERROR,
+                'Failed to check token expiration: ' . $e->getMessage()
+            );
+        }
+    }
 }

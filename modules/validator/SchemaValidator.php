@@ -21,17 +21,30 @@ class SchemaValidator
 {
     public static function validate(array $schema, array $data): OperationOutcome
     {
-        foreach ($schema as $field => $rules) {
-            $value = $data[$field] ?? ($rules['default'] ?? null);
-            $isOptional = $rules['optional'] ?? false;
+        $validatedData = []; // Сюда будем собирать валидные данные
 
-            // Отсутствие обязательного
-            if ($value === null && !$isOptional) {
-                return Operation::error(Operation::HTTP_BAD_REQUEST, $rules['message'] ?? "Missing required field: $field");
+        foreach ($schema as $field => $rules) {
+            $value = $data[$field] ?? null;
+            $hasDefault = array_key_exists('default', $rules);
+            
+            // Если поле не передано и есть default - подставляем его
+            if ($value === null && $hasDefault) {
+                $value = $rules['default'];
             }
 
-            // Не проверяем необязательное отсутствующее
-            if ($value === null && $isOptional) {
+            $isOptional = $rules['optional'] ?? false;
+
+            // Отсутствие обязательного поля (без default)
+            if ($value === null && !$isOptional && !$hasDefault) {
+                return Operation::error(
+                    Operation::HTTP_BAD_REQUEST, 
+                    $rules['message'] ?? "Missing required field: $field"
+                );
+            }
+
+            // Пропускаем необязательное поле, если оно null
+            if ($value === null && ($isOptional || $hasDefault)) {
+                $validatedData[$field] = $value; // Сохраняем null или default
                 continue;
             }
 
@@ -39,19 +52,32 @@ class SchemaValidator
 
             switch ($type) {
                 case 'string':
+                    if (!is_scalar($value) && !method_exists($value, '__toString')) {
+                        return Operation::error(
+                            Operation::HTTP_BAD_REQUEST, 
+                            $rules['message'] ?? "$field must be a string"
+                        );
+                    }
+                    $value = (string)$value;
                     $lengthMin = $rules['min'] ?? 0;
                     $lengthMax = $rules['max'] ?? PHP_INT_MAX;
-                    $result = StringUtils::checkLength((string)$value, $lengthMin, $lengthMax, $field);
+                    $result = StringUtils::checkLength($value, $lengthMin, $lengthMax, $field);
                     if ($result->code !== Operation::HTTP_OK) return $result;
 
                     if (isset($rules['enum']) && !in_array($value, $rules['enum'], true)) {
-                        return Operation::error(Operation::HTTP_BAD_REQUEST, $rules['message'] ?? "$field must be one of: " . implode(', ', $rules['enum']));
+                        return Operation::error(
+                            Operation::HTTP_BAD_REQUEST, 
+                            $rules['message'] ?? "$field must be one of: " . implode(', ', $rules['enum'])
+                        );
                     }
                     break;
 
                 case 'int':
                     if (!is_numeric($value)) {
-                        return Operation::error(Operation::HTTP_BAD_REQUEST, $rules['message'] ?? "$field must be an integer");
+                        return Operation::error(
+                            Operation::HTTP_BAD_REQUEST, 
+                            $rules['message'] ?? "$field must be an integer"
+                        );
                     }
                     $value = (int)$value;
                     $min = $rules['min'] ?? PHP_INT_MIN;
@@ -60,41 +86,68 @@ class SchemaValidator
                     if ($result->code !== Operation::HTTP_OK) return $result;
 
                     if (isset($rules['enum']) && !in_array($value, $rules['enum'], true)) {
-                        return Operation::error(Operation::HTTP_BAD_REQUEST, $rules['message'] ?? "$field must be one of: " . implode(', ', $rules['enum']));
+                        return Operation::error(
+                            Operation::HTTP_BAD_REQUEST, 
+                            $rules['message'] ?? "$field must be one of: " . implode(', ', $rules['enum'])
+                        );
                     }
                     break;
 
                 case 'float':
                     if (!is_numeric($value)) {
-                        return Operation::error(Operation::HTTP_BAD_REQUEST, $rules['message'] ?? "$field must be a float");
+                        return Operation::error(
+                            Operation::HTTP_BAD_REQUEST, 
+                            $rules['message'] ?? "$field must be a float"
+                        );
                     }
                     $value = (float)$value;
                     break;
 
                 case 'bool':
-                    if (!is_bool($value) && !in_array($value, ['true', 'false', 0, 1, '0', '1'], true)) {
-                        return Operation::error(Operation::HTTP_BAD_REQUEST, $rules['message'] ?? "$field must be a boolean");
+                    if (is_string($value)) {
+                        $value = strtolower($value);
+                        if ($value === 'true') $value = true;
+                        elseif ($value === 'false') $value = false;
                     }
+                    if (!is_bool($value) && !in_array($value, [0, 1, '0', '1'], true)) {
+                        return Operation::error(
+                            Operation::HTTP_BAD_REQUEST, 
+                            $rules['message'] ?? "$field must be a boolean"
+                        );
+                    }
+                    $value = (bool)$value;
                     break;
 
                 case 'array':
                     if (!is_array($value)) {
-                        return Operation::error(Operation::HTTP_BAD_REQUEST, $rules['message'] ?? "$field must be an array");
+                        return Operation::error(
+                            Operation::HTTP_BAD_REQUEST, 
+                            $rules['message'] ?? "$field must be an array"
+                        );
                     }
                     
                     if (isset($rules['schema'])) {
+                        $validatedItems = [];
                         foreach ($value as $item) {
                             if (!is_array($item)) {
-                                return Operation::error(Operation::HTTP_BAD_REQUEST, "Each item in $field must be an object");
+                                return Operation::error(
+                                    Operation::HTTP_BAD_REQUEST, 
+                                    "Each item in $field must be an object"
+                                );
                             }
                             $res = self::validate($rules['schema'], $item);
                             if ($res->code !== Operation::HTTP_OK) return $res;
+                            $validatedItems[] = $res->result; // Сохраняем валидированные данные
                         }
+                        $value = $validatedItems;
                     }
                     break;
 
                 default:
-                    return Operation::error(Operation::HTTP_INTERNAL_SERVER_ERROR, "Unsupported type: {$type}");
+                    return Operation::error(
+                        Operation::HTTP_INTERNAL_SERVER_ERROR, 
+                        "Unsupported type: {$type}"
+                    );
             }
 
             // Кастомный валидатор
@@ -103,11 +156,17 @@ class SchemaValidator
                 if ($customResult instanceof OperationOutcome && $customResult->code !== Operation::HTTP_OK) {
                     return $customResult;
                 } elseif ($customResult === false) {
-                    return Operation::error(Operation::HTTP_BAD_REQUEST, $rules['message'] ?? "$field failed custom validation");
+                    return Operation::error(
+                        Operation::HTTP_BAD_REQUEST, 
+                        $rules['message'] ?? "$field failed custom validation"
+                    );
                 }
             }
+
+            $validatedData[$field] = $value; // Сохраняем валидированное значение
         }
 
-        return Operation::success(null);
+        // Возвращаем только поля из схемы (фильтрация лишних данных)
+        return Operation::success($validatedData);
     }
 }

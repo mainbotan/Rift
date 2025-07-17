@@ -13,10 +13,13 @@ use Psr\Container\ContainerInterface;
 use DI\Container;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
+use Predis\Client;
+use Predis\ClientInterface;
 use Psr\Log\LoggerInterface;
 use Rift\Contracts\Database\Bridge\PDO\ConnectorInterface;
 use Rift\Contracts\Database\Configurators\ConfiguratorInterface;
 use Rift\Contracts\Http\RoutesBox\RoutesBoxInterface;
+use Rift\Core\Cache\Redis\RedisCacheService;
 use Rift\Core\Database\Bridge\PDO\Connector;
 use Rift\Core\Database\Configurators\Configurator;
 use Rift\Core\Http\ResponseEmitters\CompositeEmitter;
@@ -24,6 +27,7 @@ use Rift\Core\Http\ResponseEmitters\JsonEmitter;
 use Rift\Core\Http\ResponseEmitters\XmlEmitter;
 use Rift\Core\Http\ResponseEmitters\TextEmitter;
 use Rift\Core\Http\Router\Router;
+use Rift\Crypto\EncryptionManager;
 use Rift\Crypto\HashManager;
 use Rift\Crypto\JwtManager;
 use Rift\Crypto\UidManager;
@@ -81,8 +85,29 @@ return [
      * |
      */
 
+    // Redis
+    RedisCacheService::class => autowire(),
+    ClientInterface::class => get(Client::class),
+
+    Client::class => autowire()
+        ->constructorParameter('parameters', [
+            'scheme' => 'tcp',
+            'host' => $_ENV['REDIS_HOST'] ?? 'redis',
+            'port' => (int) ($_ENV['REDIS_PORT'] ?? 6379),
+            'password' => $_ENV['REDIS_PASSWORD'] ?? null,
+            'database' => (int) ($_ENV['REDIS_DB'] ?? 0),
+            'timeout' => (float) ($_ENV['REDIS_TIMEOUT'] ?? 1.0),
+        ])
+        ->constructorParameter('options', null),
+
     // Symfony Stopwatch Manager
     StopwatchManager::class => autowire(),
+
+    // Encryption Manager
+    EncryptionManager::class => autowire()
+        ->constructorParameter('cipher', 'AES-256-CBC')
+        ->constructorParameter('keyDerivation', 'sha256')
+        ->constructorParameter('key', $_ENV['ENCRYPTION_MANAGER_KEY']),
 
     // JWT Manager
     JwtManager::class => autowire()
@@ -92,14 +117,14 @@ return [
 
     // UID Manager
     UidManager::class => autowire(),
-
+    
     // Hash Manager
     HashManager::class => autowire()
-        ->constructorParameter('algorithm', PASSWORD_ARGON2I)
+        ->constructorParameter('algorithm', PASSWORD_ARGON2ID)
         ->constructorParameter('options', [
-            'memory_cost' => 1 << 16, 
-            'time_cost'   => 4,
-            'threads'     => 2
+            'memory_cost' => 16384,
+            'time_cost'   => 3,
+            'threads'     => 1
         ]),
 
     // Monolog (PSR-3 Logger)

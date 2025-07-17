@@ -13,6 +13,9 @@ namespace Rift\Contracts\Models;
 use Rift\Core\Databus\OperationOutcome;
 
 interface ModelInterface {
+
+    public static function getTableName(): string;
+
     /**
      * getSchema public method
      */

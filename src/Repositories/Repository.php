@@ -70,7 +70,6 @@ abstract class Repository
     private function prepareInsertOperation(PDOStatement $stmt): OperationOutcome
     {
         return Operation::success([
-            'insert_id' => $this->pdo->lastInsertId(),
             'affected_rows' => $stmt->rowCount()
         ]);
     }

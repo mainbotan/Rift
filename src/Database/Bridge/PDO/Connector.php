@@ -39,7 +39,7 @@ final class Connector implements ConnectorInterface
         return new self(
             $env['DB_DRIVER'] ?? 'pgsql',
             $env['DB_HOST'] ?? 'localhost',
-            (int) ($env['DB_PORT'] ?? self::getDefaultPort($env['DB_DRIVER'] ?? 'pgsql')),
+            (int) ($env['DB_PORT'] ?? self::getDefaultPort($_ENV['DB_DRIVER'] ?? 'pgsql')),
             $env['DB_USER'] ?? 'root',
             $env['DB_PASSWORD'] ?? '',
             $env['DB_NAME'] ?? 'rift'
@@ -92,7 +92,6 @@ final class Connector implements ConnectorInterface
         } elseif ($this->isMySQL()) {
             $baseDSN .= ';charset=utf8mb4';
         }
-
         return $baseDSN;
     }
 

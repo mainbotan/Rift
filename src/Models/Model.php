@@ -29,6 +29,10 @@ abstract class Model implements ModelInterface
         return [];
     }
     
+    public static function getVersion(): string {
+        return '1.0.0';
+    }
+    
     public static function getTableName(): string
     {
         return strtolower((new \ReflectionClass(static::class))->getShortName());
@@ -80,31 +84,57 @@ abstract class Model implements ModelInterface
         
         return implode("\n", $sql);
     }
-    
-    protected static function generateColumnSQL(string $name, array $rules): string
+    public static function getAlterTableSQL(): string
     {
-        if (!isset($rules['db_type'])) {
-            throw new \RuntimeException(
-                sprintf('Missing db_type for field "%s" in model %s', $name, static::class)
+        $sql = [];
+        $tableName = static::getTableName();
+
+        // Добавление новых колонок
+        foreach (static::getSchema() as $name => $rules) {
+            $columnDefinition = static::generateColumnSQL($name, $rules);
+            $sql[] = sprintf(
+                "ALTER TABLE %s ADD COLUMN IF NOT EXISTS %s;",
+                $tableName,
+                $columnDefinition
             );
         }
 
-        $dbType = $rules['db_type'];
-
-        // MySQL-specific преобразования
-        if ($_ENV['DB_DRIVER'] === 'mysql') {
-            $dbType = match (true) {
-                $dbType === 'SERIAL PRIMARY KEY' => 'INT AUTO_INCREMENT PRIMARY KEY',
-                str_starts_with($dbType, 'UUID') => 'CHAR(36)',
-                str_contains($dbType, 'TIMESTAMP') && !str_contains($dbType, 'DEFAULT') => 
-                    $dbType . ' DEFAULT CURRENT_TIMESTAMP',
-                default => $dbType
-            };
+        // Создание отсутствующих индексов
+        foreach (static::getIndexes() as $index) {
+            $indexName = $index['name'] ?? 'idx_'.$tableName.'_'.implode('_', $index['columns']);
+            $sql[] = sprintf(
+                "CREATE %s INDEX IF NOT EXISTS %s ON %s (%s);",
+                !empty($index['unique']) ? 'UNIQUE' : '',
+                $indexName,
+                $tableName,
+                implode(', ', $index['columns'])
+            );
         }
 
-        return "{$name} {$dbType}";
+        // Добавление внешних ключей (только если не существуют)
+        foreach (static::getForeignKeys() as $fk) {
+            $fkName = $fk['name'] ?? 'fk_'.$tableName.'_'.$fk['column'];
+            $sql[] = sprintf(
+                "ALTER TABLE %s ADD CONSTRAINT IF NOT EXISTS %s FOREIGN KEY (%s) REFERENCES %s(%s)%s;",
+                $tableName,
+                $fkName,
+                $fk['column'],
+                $fk['reference_table'],
+                $fk['reference_column'],
+                !empty($fk['on_delete']) ? " ON DELETE {$fk['on_delete']}" : ''
+            );
+        }
+
+        return implode("\n", $sql);
     }
-    
+
+    protected static function generateColumnSQL(string $name, array $rules): string {
+        if (!isset($rules['db_type'])) {
+            throw new \RuntimeException("Missing db_type for field {$name}");
+        }
+        return "{$name} {$rules['db_type']}";
+    }
+
     protected static function generateIndexSQL(array $index): string
     {
         $name = $index['name'] ?? 'idx_'.static::getTableName().'_'.implode('_', $index['columns']);

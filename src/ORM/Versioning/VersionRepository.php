@@ -1,6 +1,6 @@
 <?php
 
-namespace Rift\Core\Models\Versioning;
+namespace Rift\Core\ORM\Versioning;
 
 use PDO;
 use PDOStatement;

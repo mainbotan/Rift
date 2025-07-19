@@ -18,8 +18,8 @@ use Rift\Core\Databus\Operation;
 use Rift\Core\Databus\OperationOutcome;
 use Rift\Contracts\Database\Bridge\PDO\ConnectorInterface;
 use Rift\Contracts\Database\Configurators\ConfiguratorInterface;
-use Rift\Core\Models\Versioning\VersionModel;
-use Rift\Core\Models\Versioning\VersionRepository;
+use Rift\Core\ORM\Versioning\VersionModel;
+use Rift\Core\ORM\Versioning\VersionRepository;
 
 final class Configurator implements ConfiguratorInterface
 {
@@ -150,7 +150,7 @@ final class Configurator implements ConfiguratorInterface
 
                 try {
                     if (!$this->tableExists($pdo, 'versions')) {
-                        $pdo->exec($this->versionModel::getMigrationSQL());
+                        $pdo->exec($this->versionModel->migrate());
                     }
                 } catch (PDOException $e) {
                     return Operation::error(
@@ -167,18 +167,18 @@ final class Configurator implements ConfiguratorInterface
 
                 foreach ($models as $model) {
                     try {
-                        $versionRepository->getTableVersion($model::getTableName())
+                        $versionRepository->getTableVersion($model::NAME)
                             ->then(function($currentTableVersion) use ($pdo, $model, $versionRepository) {
                                 if ($currentTableVersion === null) {
-                                    $pdo->exec($model::getMigrationSQL());
-                                    return $versionRepository->createTable($model::getTableName(), $model::getVersion())
+                                    $pdo->exec($model->migrate());
+                                    return $versionRepository->createTable($model::NAME, $model::VERSION)
                                         ->then(function() {
                                             return Operation::success("Table created and version recorded");
                                         });
                                 } else {
-                                    if ($currentTableVersion !== $model::getVersion()) {
-                                        $pdo->exec($model::getAlterTableSQL());
-                                        return $versionRepository->updateTable($model::getTableName(), $model::getVersion())
+                                    if ($currentTableVersion !== $model::VERSION) {
+                                        $pdo->exec($model->migrate());
+                                        return $versionRepository->updateTable($model::NAME, $model::VERSION)
                                             ->then(function() {
                                                 return Operation::success("Table altered and version updated");
                                             });

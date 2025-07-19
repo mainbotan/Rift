@@ -6,7 +6,7 @@ use Rift\Contracts\Models\ModelInterface;
 use Rift\Core\ORM\Model;
 use Rift\Core\ORM\Types;
 
-class VersionModel extends Model implements ModelInterface
+class VersionModel extends Model
 {
     const NAME = 'versions';
     const VERSION = '1.0.0';

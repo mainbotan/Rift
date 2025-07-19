@@ -114,7 +114,7 @@ abstract class Repository
     protected function buildInsertQuery(array $data): OperationOutcome 
     {
         // Get table name from model (assuming getTableName() exists)
-        $table = $this->model::getTableName();
+        $table = $this->model::NAME;
 
         // Filter out null values if needed (remove this line if you want to insert NULLs)
         $filteredData = array_filter($data, fn($value) => $value !== null);
@@ -163,7 +163,7 @@ abstract class Repository
      */
     protected function buildUpdateQuery(array $data, array $where): OperationOutcome 
     {
-        $table = $this->model::getTableName();
+        $table = $this->model::NAME;
 
         $filteredData = array_filter($data, fn($value) => $value !== null);
         if (empty($filteredData)) {

@@ -2,7 +2,9 @@
 
 namespace Rift\Core\ORM;
 
-abstract class Model {
+use Rift\Contracts\Models\ModelInterface;
+
+abstract class Model implements ModelInterface {
     public Table $table;
     
     const NAME = '';

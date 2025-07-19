@@ -13,4 +13,7 @@ namespace Rift\Contracts\Models;
 interface ModelInterface {
 
     public function migrate(): string;
+
+    const string NAME = '';
+    const string VERSION = '1.0.0';
 }

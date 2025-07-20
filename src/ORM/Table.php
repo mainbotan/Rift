@@ -24,6 +24,12 @@ final class Table
         public string|int $version = '1.0.0'
     ) { }
 
+    // Validation
+    public function validation(array $validationRules): self {
+        $currentField['validation'] = $validationRules;
+        return $this;
+    }
+
     // Field operations
     public function create(string $fieldName): self {
         return $this->fieldAction($fieldName, 'CREATE');

@@ -3,6 +3,8 @@
 namespace Rift\Core\ORM;
 
 use Rift\Contracts\ORM\ModelInterface;
+use Rift\Core\Databus\OperationOutcome;
+use Rift\Validator\SchemaValidator;
 
 abstract class Model implements ModelInterface {
     public Table $table;
@@ -16,6 +18,23 @@ abstract class Model implements ModelInterface {
     }
 
     abstract protected function schema(): void;
+
+    // *****VALIDATION*****
+
+    public function validate(array $data): OperationOutcome {
+        $rules = [];
+        foreach ($this->table->fields as $field) {
+            $rules[$field['name']] = isset($field['validation']) ?? [];
+        }
+        var_dump($rules);
+        return SchemaValidator::validate($rules, $data);
+    }
+    public function validateField(string $fieldName, mixed $value): OperationOutcome {
+        $rules[$fieldName] = isset($this->table->fields[$fieldName]['validation']) ?? [];
+        return SchemaValidator::validate($rules, $value);
+    }
+
+    // *****MIGRATION*****
 
     public function migrate(): string {
         $commands = [];

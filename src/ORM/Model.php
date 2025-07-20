@@ -53,8 +53,9 @@ abstract class Model implements ModelInterface {
                 }
                 
                 if (isset($field['default'])) {
-                    // Убираем экранирование, так как format() сделает это автоматически
-                    $fieldDef .= " DEFAULT " . $this->formatValue($field['default']);
+                    // Для строковых значений используем двойные кавычки внутри format()
+                    $default = $this->formatValue($field['default']);
+                    $fieldDef .= " DEFAULT " . str_replace("'", "''", $default);
                 }
                 
                 $alters[] = sprintf(
@@ -145,8 +146,8 @@ abstract class Model implements ModelInterface {
 
     private function formatValue($value): string {
         if (is_string($value)) {
-            // Для строковых значений используем одинарные кавычки
-            return "'" . str_replace("'", "''", $value) . "'";
+            // Возвращаем значение без внешних кавычек
+            return $value;
         }
         if (is_bool($value)) {
             return $value ? 'TRUE' : 'FALSE';
@@ -155,7 +156,7 @@ abstract class Model implements ModelInterface {
             return 'NULL';
         }
         if (is_array($value) || is_object($value)) {
-            return "'" . json_encode($value) . "'";
+            return json_encode($value);
         }
         return (string)$value;
     }

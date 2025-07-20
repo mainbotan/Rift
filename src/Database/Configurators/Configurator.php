@@ -167,7 +167,6 @@ final class Configurator implements ConfiguratorInterface
                                         });
                                 } else {
                                     if ($currentTableVersion !== $model::VERSION) {
-                                        var_dump($model->migrate());
                                         $pdo->exec($model->migrate());
                                         return $versionRepository->updateTable($model::NAME, $model::VERSION)
                                             ->then(function() {

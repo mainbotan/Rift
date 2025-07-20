@@ -152,7 +152,7 @@ final class Configurator implements ConfiguratorInterface
                 }
 
                 $versionRepository = $this->getVersionRepository($pdo);
-
+                
                 foreach ($models as $model) {
                     try {
                         $versionRepository->getTableVersion($model::NAME)
@@ -162,14 +162,14 @@ final class Configurator implements ConfiguratorInterface
                                 if ($currentTableVersion === null) {
                                     $pdo->exec($model->migrate());
                                     return $versionRepository->createTable($model::NAME, $model::VERSION)
-                                        ->then(function() {
+                                        ->then(function() use ($model, $currentTableVersion) {
                                             return Operation::success("Table created and version recorded");
                                         });
                                 } else {
                                     if ($currentTableVersion !== $model::VERSION) {
                                         $pdo->exec($model->migrate());
                                         return $versionRepository->updateTable($model::NAME, $model::VERSION)
-                                            ->then(function() {
+                                            ->then(function() use ($model, $currentTableVersion) {
                                                 return Operation::success("Table altered and version updated");
                                             });
                                     }

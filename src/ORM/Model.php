@@ -3,10 +3,12 @@
 namespace Rift\Core\ORM;
 
 use Rift\Contracts\ORM\ModelInterface;
+use Rift\Core\Databus\Operation;
 use Rift\Core\Databus\OperationOutcome;
 use Rift\Validator\SchemaValidator;
 
-abstract class Model implements ModelInterface {
+abstract class Model implements ModelInterface 
+{
     public Table $table;
     
     const NAME = '';
@@ -19,37 +21,37 @@ abstract class Model implements ModelInterface {
 
     abstract protected function schema(): void;
 
-    // *****VALIDATION*****
-
+    // ***** VALIDATION *****
+    
     public function validate(array $data): OperationOutcome {
         $rules = [];
         foreach ($this->table->fields as $field) {
-            $rules[$field['name']] = isset($field['validation']) ?? [];
+            if (isset($field['validation'])) {
+                $rules[$field['name']] = $field['validation'];
+            }
         }
-        var_dump($rules);
         return SchemaValidator::validate($rules, $data);
     }
+
     public function validateField(string $fieldName, mixed $value): OperationOutcome {
-        $rules[$fieldName] = isset($this->table->fields[$fieldName]['validation']) ?? [];
-        return SchemaValidator::validate($rules, $value);
+        if (!isset($this->table->fields[$fieldName]['validation'])) {
+            return Operation::success(null);
+        }
+        return SchemaValidator::validate(
+            [$fieldName => $this->table->fields[$fieldName]['validation']], 
+            [$fieldName => $value]
+        );
     }
 
-    // *****MIGRATION*****
-
+    // ***** MIGRATION *****
+    
     public function migrate(): string {
-        $commands = [];
-        
-        // Для новых полей используем ALTER TABLE ADD COLUMN
-        $newFields = $this->getNewFieldsSQL();
-        if ($newFields) {
-            $commands[] = $newFields;
-        }
-        
-        // Остальные операции (индексы, внешние ключи)
-        $commands[] = $this->generateCreateTableSQL(); // Основная таблица
-        $commands[] = $this->generateAlterTableSQL();  // Изменения полей
-        $commands[] = $this->generateIndexesSQL();     // Индексы
-        $commands[] = $this->generateForeignKeysSQL(); // Внешние ключи
+        $commands = [
+            $this->generateCreateTableSQL(),
+            $this->generateAlterTableSQL(),
+            $this->generateIndexesSQL(),
+            $this->generateForeignKeysSQL()
+        ];
         
         $commands = array_filter($commands);
         
@@ -60,59 +62,21 @@ abstract class Model implements ModelInterface {
         return "BEGIN;\n" . implode(";\n", $commands) . ";\nCOMMIT;";
     }
 
-    private function getNewFieldsSQL(): string {
-        $alters = [];
-        
-        foreach ($this->table->fields as $field) {
-            if ($field['action'] === 'CREATE') {
-                $fieldDef = "{$field['name']} {$field['db_type']}";
-                
-                if (isset($field['nullable']) && !$field['nullable']) {
-                    $fieldDef .= ' NOT NULL';
-                }
-                
-                if (isset($field['default'])) {
-                    // Для строковых значений используем двойные кавычки внутри format()
-                    $default = $this->formatValue($field['default']);
-                    $fieldDef .= " DEFAULT " . str_replace("'", "''", $default);
-                }
-                
-                $alters[] = sprintf(
-                    "DO $$\nBEGIN\n" .
-                    "  IF NOT EXISTS (SELECT 1 FROM information_schema.columns " .
-                    "                WHERE table_name = '%s' AND column_name = '%s') THEN\n" .
-                    "    EXECUTE format('ALTER TABLE %%I ADD COLUMN %s', '%s');\n" .
-                    "  END IF;\n" .
-                    "END\n$$;",
-                    static::NAME,
-                    $field['name'],
-                    $fieldDef,
-                    static::NAME
-                );
-            }
-        }
-        
-        return implode("\n", $alters);
-    }
-
     private function generateCreateTableSQL(): string {
         $fields = [];
         
         foreach ($this->table->fields as $field) {
-            // Только поля без явного действия или с другими действиями
-            if (!isset($field['action']) || $field['action'] !== 'CREATE') {
-                $fieldDef = "{$field['name']} {$field['db_type']}";
-                
-                if (isset($field['nullable']) && !$field['nullable']) {
-                    $fieldDef .= ' NOT NULL';
-                }
-                
-                if (isset($field['default'])) {
-                    $fieldDef .= ' DEFAULT ' . $this->formatValue($field['default']);
-                }
-                
-                $fields[] = $fieldDef;
+            $fieldDef = "{$field['name']} {$field['db_type']}";
+            
+            if (isset($field['nullable']) && !$field['nullable']) {
+                $fieldDef .= ' NOT NULL';
             }
+            
+            if (isset($field['default'])) {
+                $fieldDef .= ' DEFAULT ' . $this->formatDefaultValue($field['default']);
+            }
+            
+            $fields[] = $fieldDef;
         }
         
         if (empty($fields)) {
@@ -120,23 +84,49 @@ abstract class Model implements ModelInterface {
         }
         
         return "CREATE TABLE IF NOT EXISTS " . static::NAME . " (\n    " . 
-            implode(",\n    ", $fields) . "\n)";
+               implode(",\n    ", $fields) . "\n)";
     }
 
     private function generateAlterTableSQL(): string {
         $alters = [];
         
         foreach ($this->table->fields as $field) {
+            if (!isset($field['action']) || $field['action'] === 'CREATE') {
+                continue;
+            }
+            
             if ($field['action'] === 'UPDATE') {
-                $alters[] = "ALTER TABLE " . static::NAME . " ALTER COLUMN " . 
-                            $field['name'] . " TYPE " . $field['db_type'];
+                $alters[] = sprintf(
+                    "DO $$\nBEGIN\n" .
+                    "  IF EXISTS (SELECT 1 FROM information_schema.columns " .
+                    "             WHERE table_name = '%s' AND column_name = '%s') THEN\n" .
+                    "    EXECUTE format('ALTER TABLE %%I ALTER COLUMN %%I TYPE %s', '%s', '%s');\n" .
+                    "  END IF;\n" .
+                    "END\n$$;",
+                    static::NAME,
+                    $field['name'],
+                    $field['db_type'],
+                    static::NAME,
+                    $field['name']
+                );
             } 
             elseif ($field['action'] === 'DELETE') {
-                $alters[] = "ALTER TABLE " . static::NAME . " DROP COLUMN " . $field['name'];
+                $alters[] = sprintf(
+                    "DO $$\nBEGIN\n" .
+                    "  IF EXISTS (SELECT 1 FROM information_schema.columns " .
+                    "             WHERE table_name = '%s' AND column_name = '%s') THEN\n" .
+                    "    EXECUTE format('ALTER TABLE %%I DROP COLUMN %%I', '%s', '%s');\n" .
+                    "  END IF;\n" .
+                    "END\n$$;",
+                    static::NAME,
+                    $field['name'],
+                    static::NAME,
+                    $field['name']
+                );
             }
         }
         
-        return empty($alters) ? '' : implode(";\n", $alters);
+        return implode(";\n", $alters);
     }
 
     private function generateIndexesSQL(): string {
@@ -144,8 +134,22 @@ abstract class Model implements ModelInterface {
         
         foreach ($this->table->indexes as $index) {
             $type = $index['unique'] ? 'UNIQUE INDEX' : 'INDEX';
-            $indexes[] = "CREATE $type IF NOT EXISTS {$index['name']} ON " . 
-                        static::NAME . " (" . implode(', ', $index['columns']) . ")";
+            $columns = implode(', ', $index['columns']);
+            
+            $indexes[] = sprintf(
+                "DO $$\nBEGIN\n" .
+                "  IF NOT EXISTS (SELECT 1 FROM pg_indexes " .
+                "                WHERE tablename = '%s' AND indexname = '%s') THEN\n" .
+                "    EXECUTE format('CREATE %s IF NOT EXISTS %s ON %%I (%s)', '%s');\n" .
+                "  END IF;\n" .
+                "END\n$$;",
+                static::NAME,
+                $index['name'],
+                $type,
+                $index['name'],
+                $columns,
+                static::NAME
+            );
         }
         
         return implode(";\n", $indexes);
@@ -155,18 +159,32 @@ abstract class Model implements ModelInterface {
         $fks = [];
         
         foreach ($this->table->foreignKeys as $fk) {
-            $fks[] = "ALTER TABLE " . static::NAME . " ADD CONSTRAINT {$fk['name']} " .
-                     "FOREIGN KEY ({$fk['column']}) REFERENCES {$fk['reference_table']} " .
-                     "({$fk['reference_column']}) ON DELETE " . ($fk['on_delete'] ?? 'NO ACTION');
+            $fks[] = sprintf(
+                "DO $$\nBEGIN\n" .
+                "  IF NOT EXISTS (SELECT 1 FROM information_schema.table_constraints " .
+                "                WHERE constraint_name = '%s' AND table_name = '%s') THEN\n" .
+                "    EXECUTE format('ALTER TABLE %%I ADD CONSTRAINT %s FOREIGN KEY (%s) " .
+                "                   REFERENCES %s (%s) ON DELETE %s', '%s');\n" .
+                "  END IF;\n" .
+                "END\n$$;",
+                $fk['name'],
+                static::NAME,
+                $fk['name'],
+                $fk['column'],
+                $fk['reference_table'],
+                $fk['reference_column'],
+                $fk['on_delete'] ?? 'NO ACTION',
+                static::NAME
+            );
         }
         
-        return empty($fks) ? '' : implode(";\n", $fks);
+        return implode(";\n", $fks);
     }
 
-    private function formatValue($value): string {
+    private function formatDefaultValue($value): string {
         if (is_string($value)) {
-            // Возвращаем значение без внешних кавычек
-            return $value;
+            // Простое экранирование кавычек для SQL
+            return "'" . str_replace("'", "''", $value) . "'";
         }
         if (is_bool($value)) {
             return $value ? 'TRUE' : 'FALSE';
@@ -175,7 +193,9 @@ abstract class Model implements ModelInterface {
             return 'NULL';
         }
         if (is_array($value) || is_object($value)) {
-            return json_encode($value);
+            // Экранируем JSON-строку
+            $json = json_encode($value);
+            return "'" . str_replace("'", "''", $json) . "'";
         }
         return (string)$value;
     }

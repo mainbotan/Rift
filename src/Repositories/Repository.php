@@ -13,7 +13,7 @@ namespace Rift\Core\Repositories;
 use PDO;
 use PDOStatement;
 use PDOException;
-use Rift\Contracts\Models\ModelInterface;
+use Rift\Contracts\ORM\ModelInterface;
 use Rift\Core\Databus\Operation;
 use Rift\Core\Databus\OperationOutcome;
 
@@ -70,7 +70,6 @@ abstract class Repository
     private function prepareInsertOperation(PDOStatement $stmt): OperationOutcome
     {
         return Operation::success([
-            'insert_id' => $this->pdo->lastInsertId(),
             'affected_rows' => $stmt->rowCount()
         ]);
     }
@@ -107,6 +106,56 @@ abstract class Repository
 
 
     /**
+     * Generates a parameterized INSERT query based on provided data
+     * 
+     * @param array $data Associative array where keys are column names and values are data to insert
+     * @return OperationOutcome Returns prepared PDO statement wrapped in OperationOutcome
+     */
+    protected function buildInsertQuery(array $data): OperationOutcome 
+    {
+        // Get table name from model (assuming getTableName() exists)
+        $table = $this->model::NAME;
+
+        // Filter out null values if needed (remove this line if you want to insert NULLs)
+        $filteredData = array_filter($data, fn($value) => $value !== null);
+        
+        // Check we have data to insert
+        if (empty($filteredData)) {
+            return Operation::error(
+                Operation::HTTP_BAD_REQUEST, 
+                "No valid data provided for insertion."
+            );
+        }
+
+        // Prepare column and placeholder lists
+        $columns = array_keys($filteredData);
+        $placeholders = array_map(fn($col) => ":{$col}", $columns);
+
+        // Build SQL query
+        $columnsClause = implode(', ', $columns);
+        $placeholdersClause = implode(', ', $placeholders);
+        $sql = "INSERT INTO {$table} ({$columnsClause}) VALUES ({$placeholdersClause})";
+
+        // Prepare statement
+        try {
+            $stmt = $this->pdo->prepare($sql);
+            
+            // Bind all values with proper typing
+            foreach ($filteredData as $column => $value) {
+                $stmt->bindValue(":{$column}", $value, $this->getParamType($value));
+            }
+
+            return Operation::success($stmt);
+            
+        } catch (\PDOException $e) {
+            return Operation::error(
+                Operation::HTTP_INTERNAL_SERVER_ERROR,
+                "Failed to prepare INSERT statement: " . $e->getMessage()
+            );
+        }
+    }
+
+    /**
      * Generates an UPDATE request based on the data.
      * 
      * @param array $data Data to update (keys = field names).
@@ -114,7 +163,7 @@ abstract class Repository
      */
     protected function buildUpdateQuery(array $data, array $where): OperationOutcome 
     {
-        $table = $this->model::getTableName();
+        $table = $this->model::NAME;
 
         $filteredData = array_filter($data, fn($value) => $value !== null);
         if (empty($filteredData)) {
@@ -146,7 +195,7 @@ abstract class Repository
         return Operation::success($stmt);
     }
 
-    private function getParamType($value): int 
+    protected function getParamType($value): int 
     {
         return match (true) {
             is_int($value) => \PDO::PARAM_INT,

@@ -12,10 +12,14 @@ namespace Rift\Core\Database\Configurators;
 
 use PDO;
 use PDOException;
+use PDOStatement;
+use PHPUnit\Framework\Constraint\Operator;
 use Rift\Core\Databus\Operation;
 use Rift\Core\Databus\OperationOutcome;
 use Rift\Contracts\Database\Bridge\PDO\ConnectorInterface;
 use Rift\Contracts\Database\Configurators\ConfiguratorInterface;
+use Rift\Core\ORM\Versioning\VersionModel;
+use Rift\Core\ORM\Versioning\VersionRepository;
 
 final class Configurator implements ConfiguratorInterface
 {
@@ -27,18 +31,17 @@ final class Configurator implements ConfiguratorInterface
     private bool $skipSchemaCreation = false;
 
     public function __construct(
-        private ConnectorInterface $connector
+        private ConnectorInterface $connector,
+        private VersionModel $versionModel
     ) {}
 
     public static function registerTenantModel(string $modelClass): void
     {
-        self::validateModel($modelClass);
         self::$tenantModels[$modelClass] = $modelClass;
     }
 
     public static function registerSystemModel(string $modelClass): void
     {
-        self::validateModel($modelClass);
         self::$systemModels[$modelClass] = $modelClass;
     }
 
@@ -101,15 +104,6 @@ final class Configurator implements ConfiguratorInterface
         }
     }
 
-    private static function validateModel(string $modelClass): void
-    {
-        if (!method_exists($modelClass, 'getMigrationSQL')) {
-            throw new \RuntimeException(
-                "Model {$modelClass} must implement getMigrationSQL() method"
-            );
-        }
-    }
-
     private function createSchema(string $schema): void
     {
         $adminConnection = $this->connector->createAdminConnection();
@@ -139,33 +133,84 @@ final class Configurator implements ConfiguratorInterface
                 "No models to migrate for schema '{$schema}'"
             );
         }
+        return $this->connector->createSchemaConnection($schema)
+            ->then(function ($pdo) use ($models, $schema) {
 
-        $connection = $this->connector->createSchemaConnection($schema);
-        
-        if (!$connection->isSuccess()) {
-            return $connection;
-        }
+                try {
+                    if (!$this->tableExists($pdo, 'versions')) {
+                        $pdo->exec($this->versionModel->migrate());
+                    }
+                } catch (PDOException $e) {
+                    return Operation::error(
+                        Operation::HTTP_INTERNAL_SERVER_ERROR,
+                        "Error initializing the schema version table.",
+                        [
+                            'error' => $e->getMessage(),
+                            'schema' => $schema
+                        ]
+                    );
+                }
 
-        $pdo = $connection->result;
+                $versionRepository = $this->getVersionRepository($pdo);
 
-        foreach ($models as $model) {
-            try {
-                $pdo->exec($model::getMigrationSQL($schema));
-            } catch (PDOException $e) {
-                return Operation::error(
-                    Operation::HTTP_INTERNAL_SERVER_ERROR,
-                    "Migration failed for model: {$model}",
-                    [
-                        'model' => $model,
-                        'error' => $e->getMessage(),
-                        'schema' => $schema
-                    ]
+                foreach ($models as $model) {
+                    try {
+                        $versionRepository->getTableVersion($model::NAME)
+                            ->then(function($currentTableVersion) use ($pdo, $model, $versionRepository) {
+                                $model = new $model;
+
+                                if ($currentTableVersion === null) {
+                                    $pdo->exec($model->migrate());
+                                    return $versionRepository->createTable($model::NAME, $model::VERSION)
+                                        ->then(function() {
+                                            return Operation::success("Table created and version recorded");
+                                        });
+                                } else {
+                                    if ($currentTableVersion !== $model::VERSION) {
+                                        var_dump($model->migrate());
+                                        $pdo->exec($model->migrate());
+                                        return $versionRepository->updateTable($model::NAME, $model::VERSION)
+                                            ->then(function() {
+                                                return Operation::success("Table altered and version updated");
+                                            });
+                                    }
+                                    return Operation::success("No migration needed - version is current");
+                                }
+                            })
+                            ->catch(function(OperationOutcome $error) {
+                                return $error;
+                            });
+                    } catch (PDOException $e) {
+                        return Operation::error(
+                            Operation::HTTP_INTERNAL_SERVER_ERROR,
+                            "Migration failed for model: {$model}",
+                            [
+                                'model' => $model,
+                                'error' => $e->getMessage(),
+                                'schema' => $schema
+                            ]
+                        );
+                    }
+                }
+                return Operation::success(null);
+            })
+            ->then(function() use ($schema, $models) {
+                return Operation::success(
+                    "Schema '{$schema}' configured with " . count($models) . " models"
                 );
-            }
-        }
-
-        return Operation::success(
-            "Schema '{$schema}' configured with " . count($models) . " models"
+            });
+    }
+    private function getVersionRepository(PDO $pdo): VersionRepository {
+        return new VersionRepository(
+            $pdo, 
+            new VersionModel
         );
+    }
+    private function tableExists(PDO $pdo, string $tableName): bool
+    {
+        $stmt = $pdo->query(
+            "SELECT EXISTS (SELECT FROM pg_tables WHERE schemaname = current_schema() AND tablename = '$tableName')"
+        );
+        return (bool) $stmt->fetchColumn();
     }
 }

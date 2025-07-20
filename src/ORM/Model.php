@@ -1,97 +1,162 @@
 <?php
-/*
- * |--------------------------------------------------------------------------
- * |
- * This file is a component of the Rift Miniframework core <v 1.0.0>
- * |
- * ORM part -> model.
- * |
- * |--------------------------------------------------------------------------
- */
+
 namespace Rift\Core\ORM;
 
-use Rift\Core\ORM\SchemaBuilder;
-use Rift\Core\Databus\OperationOutcome;
-use Rift\Core\Models\Model as BaseModel;
+use Rift\Contracts\ORM\ModelInterface;
 
-abstract class Model extends BaseModel
-{
-    private static array $schemaDefinition = [];
-    private static array $indexes = [];
-    private static array $foreignKeys = [];
-    private static array $relations = [];
-    private static array $triggers = [];
-    private static array $hooks = [
-        'beforeCreate' => [],
-        'afterCreate' => [],
-        'beforeUpdate' => [],
-        'afterUpdate' => [],
-        'beforeDelete' => [],
-        'afterDelete' => []
-    ];
+abstract class Model implements ModelInterface {
+    public Table $table;
+    
+    const NAME = '';
+    const VERSION = '1.0.0';
 
-    public static function define(): SchemaBuilder
-    {
-        return new SchemaBuilder(static::class);
+    public function __construct() {
+        $this->table = new Table(static::NAME, static::VERSION);
+        $this->schema();
     }
 
-    public static function getSchema(): array
-    {
-        return self::$schemaDefinition;
+    abstract protected function schema(): void;
+
+    public function migrate(): string {
+        $commands = [];
+        
+        // Для новых полей используем ALTER TABLE ADD COLUMN
+        $newFields = $this->getNewFieldsSQL();
+        if ($newFields) {
+            $commands[] = $newFields;
+        }
+        
+        // Остальные операции (индексы, внешние ключи)
+        $commands[] = $this->generateCreateTableSQL(); // Основная таблица
+        $commands[] = $this->generateAlterTableSQL();  // Изменения полей
+        $commands[] = $this->generateIndexesSQL();     // Индексы
+        $commands[] = $this->generateForeignKeysSQL(); // Внешние ключи
+        
+        $commands = array_filter($commands);
+        
+        if (empty($commands)) {
+            return '';
+        }
+        
+        return "BEGIN;\n" . implode(";\n", $commands) . ";\nCOMMIT;";
     }
 
-    public static function getIndexes(): array
-    {
-        return self::$indexes;
+    private function getNewFieldsSQL(): string {
+        $alters = [];
+        
+        foreach ($this->table->fields as $field) {
+            if ($field['action'] === 'CREATE') {
+                $fieldDef = "{$field['name']} {$field['db_type']}";
+                
+                if (isset($field['nullable']) && !$field['nullable']) {
+                    $fieldDef .= ' NOT NULL';
+                }
+                
+                if (isset($field['default'])) {
+                    // Убираем экранирование, так как format() сделает это автоматически
+                    $fieldDef .= " DEFAULT " . $this->formatValue($field['default']);
+                }
+                
+                $alters[] = sprintf(
+                    "DO $$\nBEGIN\n" .
+                    "  IF NOT EXISTS (SELECT 1 FROM information_schema.columns " .
+                    "                WHERE table_name = '%s' AND column_name = '%s') THEN\n" .
+                    "    EXECUTE format('ALTER TABLE %%I ADD COLUMN %s', '%s');\n" .
+                    "  END IF;\n" .
+                    "END\n$$;",
+                    static::NAME,
+                    $field['name'],
+                    $fieldDef,
+                    static::NAME
+                );
+            }
+        }
+        
+        return implode("\n", $alters);
     }
 
-    public static function getForeignKeys(): array
-    {
-        return self::$foreignKeys;
+    private function generateCreateTableSQL(): string {
+        $fields = [];
+        
+        foreach ($this->table->fields as $field) {
+            // Только поля без явного действия или с другими действиями
+            if (!isset($field['action']) || $field['action'] !== 'CREATE') {
+                $fieldDef = "{$field['name']} {$field['db_type']}";
+                
+                if (isset($field['nullable']) && !$field['nullable']) {
+                    $fieldDef .= ' NOT NULL';
+                }
+                
+                if (isset($field['default'])) {
+                    $fieldDef .= ' DEFAULT ' . $this->formatValue($field['default']);
+                }
+                
+                $fields[] = $fieldDef;
+            }
+        }
+        
+        if (empty($fields)) {
+            return '';
+        }
+        
+        return "CREATE TABLE IF NOT EXISTS " . static::NAME . " (\n    " . 
+            implode(",\n    ", $fields) . "\n)";
     }
 
-    public static function getRelations(): array
-    {
-        return self::$relations;
+    private function generateAlterTableSQL(): string {
+        $alters = [];
+        
+        foreach ($this->table->fields as $field) {
+            if ($field['action'] === 'UPDATE') {
+                $alters[] = "ALTER TABLE " . static::NAME . " ALTER COLUMN " . 
+                            $field['name'] . " TYPE " . $field['db_type'];
+            } 
+            elseif ($field['action'] === 'DELETE') {
+                $alters[] = "ALTER TABLE " . static::NAME . " DROP COLUMN " . $field['name'];
+            }
+        }
+        
+        return empty($alters) ? '' : implode(";\n", $alters);
     }
 
-    public static function getTriggers(): array
-    {
-        return self::$triggers;
+    private function generateIndexesSQL(): string {
+        $indexes = [];
+        
+        foreach ($this->table->indexes as $index) {
+            $type = $index['unique'] ? 'UNIQUE INDEX' : 'INDEX';
+            $indexes[] = "CREATE $type IF NOT EXISTS {$index['name']} ON " . 
+                        static::NAME . " (" . implode(', ', $index['columns']) . ")";
+        }
+        
+        return implode(";\n", $indexes);
     }
 
-    public static function getHooks(string $type): array
-    {
-        return self::$hooks[$type] ?? [];
+    private function generateForeignKeysSQL(): string {
+        $fks = [];
+        
+        foreach ($this->table->foreignKeys as $fk) {
+            $fks[] = "ALTER TABLE " . static::NAME . " ADD CONSTRAINT {$fk['name']} " .
+                     "FOREIGN KEY ({$fk['column']}) REFERENCES {$fk['reference_table']} " .
+                     "({$fk['reference_column']}) ON DELETE " . ($fk['on_delete'] ?? 'NO ACTION');
+        }
+        
+        return empty($fks) ? '' : implode(";\n", $fks);
     }
 
-    public static function addIndex(array $index): void
-    {
-        self::$indexes[] = $index;
-    }
-
-    public static function addForeignKey(array $foreignKey): void
-    {
-        self::$foreignKeys[] = $foreignKey;
-    }
-
-    public static function setSchema(array $schema): void
-    {
-        self::$schemaDefinition = $schema;
-    }
-
-    public static function addRelation(array $relation): void
-    {
-        self::$relations[] = $relation;
-    }
-
-    public static function addTrigger(array $trigger): void
-    {
-        self::$triggers[] = $trigger;
-    }
-
-    public static function addHook(string $type, callable $callback): void
-    {
-        self::$hooks[$type][] = $callback;
+    private function formatValue($value): string {
+        if (is_string($value)) {
+            // Для строковых значений используем одинарные кавычки
+            return "'" . str_replace("'", "''", $value) . "'";
+        }
+        if (is_bool($value)) {
+            return $value ? 'TRUE' : 'FALSE';
+        }
+        if (is_null($value)) {
+            return 'NULL';
+        }
+        if (is_array($value) || is_object($value)) {
+            return "'" . json_encode($value) . "'";
+        }
+        return (string)$value;
     }
 }

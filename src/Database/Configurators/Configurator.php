@@ -37,13 +37,11 @@ final class Configurator implements ConfiguratorInterface
 
     public static function registerTenantModel(string $modelClass): void
     {
-        self::validateModel($modelClass);
         self::$tenantModels[$modelClass] = $modelClass;
     }
 
     public static function registerSystemModel(string $modelClass): void
     {
-        self::validateModel($modelClass);
         self::$systemModels[$modelClass] = $modelClass;
     }
 
@@ -106,15 +104,6 @@ final class Configurator implements ConfiguratorInterface
         }
     }
 
-    private static function validateModel(string $modelClass): void
-    {
-        if (!method_exists($modelClass, 'getMigrationSQL')) {
-            throw new \RuntimeException(
-                "Model {$modelClass} must implement getMigrationSQL() method"
-            );
-        }
-    }
-
     private function createSchema(string $schema): void
     {
         $adminConnection = $this->connector->createAdminConnection();
@@ -144,7 +133,6 @@ final class Configurator implements ConfiguratorInterface
                 "No models to migrate for schema '{$schema}'"
             );
         }
-
         return $this->connector->createSchemaConnection($schema)
             ->then(function ($pdo) use ($models, $schema) {
 
@@ -169,6 +157,8 @@ final class Configurator implements ConfiguratorInterface
                     try {
                         $versionRepository->getTableVersion($model::NAME)
                             ->then(function($currentTableVersion) use ($pdo, $model, $versionRepository) {
+                                $model = new $model;
+
                                 if ($currentTableVersion === null) {
                                     $pdo->exec($model->migrate());
                                     return $versionRepository->createTable($model::NAME, $model::VERSION)
@@ -177,6 +167,7 @@ final class Configurator implements ConfiguratorInterface
                                         });
                                 } else {
                                     if ($currentTableVersion !== $model::VERSION) {
+                                        var_dump($model->migrate());
                                         $pdo->exec($model->migrate());
                                         return $versionRepository->updateTable($model::NAME, $model::VERSION)
                                             ->then(function() {

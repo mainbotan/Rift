@@ -2,7 +2,7 @@
 
 namespace Rift\Core\ORM;
 
-use Rift\Contracts\Models\ModelInterface;
+use Rift\Contracts\ORM\ModelInterface;
 
 abstract class Model implements ModelInterface {
     public Table $table;
@@ -20,45 +20,67 @@ abstract class Model implements ModelInterface {
     public function migrate(): string {
         $commands = [];
         
-        // Создание таблицы
-        $createTable = $this->generateCreateTableSQL();
-        if ($createTable) {
-            $commands[] = $createTable;
+        // Для новых полей используем ALTER TABLE ADD COLUMN
+        $newFields = $this->getNewFieldsSQL();
+        if ($newFields) {
+            $commands[] = $newFields;
         }
         
-        // Изменение таблицы
-        $alterTable = $this->generateAlterTableSQL();
-        if ($alterTable) {
-            $commands[] = $alterTable;
-        }
+        // Остальные операции (индексы, внешние ключи)
+        $commands[] = $this->generateCreateTableSQL(); // Основная таблица
+        $commands[] = $this->generateAlterTableSQL();  // Изменения полей
+        $commands[] = $this->generateIndexesSQL();     // Индексы
+        $commands[] = $this->generateForeignKeysSQL(); // Внешние ключи
         
-        // Индексы
-        $indexes = $this->generateIndexesSQL();
-        if ($indexes) {
-            $commands[] = $indexes;
-        }
-        
-        // Внешние ключи
-        $fks = $this->generateForeignKeysSQL();
-        if ($fks) {
-            $commands[] = $fks;
-        }
+        $commands = array_filter($commands);
         
         if (empty($commands)) {
             return '';
         }
         
-        // Объединяем команды, добавляя ; после каждой
-        $sqlBody = implode(";\n", $commands);
+        return "BEGIN;\n" . implode(";\n", $commands) . ";\nCOMMIT;";
+    }
+
+    private function getNewFieldsSQL(): string {
+        $alters = [];
         
-        return "BEGIN;\n" . $sqlBody . ";\nCOMMIT;";
+        foreach ($this->table->fields as $field) {
+            if ($field['action'] === 'CREATE') {
+                $fieldDef = "{$field['name']} {$field['db_type']}";
+                
+                if (isset($field['nullable']) && !$field['nullable']) {
+                    $fieldDef .= ' NOT NULL';
+                }
+                
+                if (isset($field['default'])) {
+                    // Убираем экранирование, так как format() сделает это автоматически
+                    $fieldDef .= " DEFAULT " . $this->formatValue($field['default']);
+                }
+                
+                $alters[] = sprintf(
+                    "DO $$\nBEGIN\n" .
+                    "  IF NOT EXISTS (SELECT 1 FROM information_schema.columns " .
+                    "                WHERE table_name = '%s' AND column_name = '%s') THEN\n" .
+                    "    EXECUTE format('ALTER TABLE %%I ADD COLUMN %s', '%s');\n" .
+                    "  END IF;\n" .
+                    "END\n$$;",
+                    static::NAME,
+                    $field['name'],
+                    $fieldDef,
+                    static::NAME
+                );
+            }
+        }
+        
+        return implode("\n", $alters);
     }
 
     private function generateCreateTableSQL(): string {
         $fields = [];
         
         foreach ($this->table->fields as $field) {
-            if ($field['action'] === 'CREATE') {
+            // Только поля без явного действия или с другими действиями
+            if (!isset($field['action']) || $field['action'] !== 'CREATE') {
                 $fieldDef = "{$field['name']} {$field['db_type']}";
                 
                 if (isset($field['nullable']) && !$field['nullable']) {
@@ -123,6 +145,7 @@ abstract class Model implements ModelInterface {
 
     private function formatValue($value): string {
         if (is_string($value)) {
+            // Для строковых значений используем одинарные кавычки
             return "'" . str_replace("'", "''", $value) . "'";
         }
         if (is_bool($value)) {

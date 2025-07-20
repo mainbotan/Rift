@@ -8,12 +8,11 @@
  * |
  * |--------------------------------------------------------------------------
  */
-namespace Rift\Contracts\Models;
+namespace Rift\Contracts\ORM;
 
 interface ModelInterface {
-
+    const NAME = '';
+    const VERSION = '1.0.0';
+    
     public function migrate(): string;
-
-    const string NAME = '';
-    const string VERSION = '1.0.0';
 }

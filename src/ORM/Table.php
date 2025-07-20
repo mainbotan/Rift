@@ -26,7 +26,7 @@ final class Table
 
     // Validation
     public function validation(array $validationRules): self {
-        $currentField['validation'] = $validationRules;
+        $this->currentField['validation'] = $validationRules;
         return $this;
     }
 

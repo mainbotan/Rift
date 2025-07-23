@@ -1,10 +1,10 @@
 <?php
 
-namespace Rift\Core\ORM\Versioning;
+namespace Rift\Core\Database\Models\Versioning;
 
-use Rift\Contracts\Models\ModelInterface;
-use Rift\Core\ORM\Model;
-use Rift\Core\ORM\Types;
+use Rift\Contracts\Database\Models\ModelInterface;
+use Rift\Core\Database\Models\Model;
+use Rift\Core\Database\Models\Types;
 
 class VersionModel extends Model
 {

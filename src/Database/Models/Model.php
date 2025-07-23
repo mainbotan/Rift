@@ -1,8 +1,8 @@
 <?php
 
-namespace Rift\Core\ORM;
+namespace Rift\Core\Database\Models;
 
-use Rift\Contracts\ORM\ModelInterface;
+use Rift\Contracts\Database\Models\ModelInterface;
 use Rift\Core\Databus\Operation;
 use Rift\Core\Databus\OperationOutcome;
 use Rift\Validator\SchemaValidator;
@@ -59,7 +59,7 @@ abstract class Model implements ModelInterface
             return '';
         }
         
-        return "BEGIN;\n" . implode(";\n", $commands) . ";\nCOMMIT;";
+        return implode(";\n", $commands);
     }
 
     private function generateCreateTableSQL(): string {

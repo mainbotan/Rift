@@ -8,7 +8,7 @@
  * |
  * |--------------------------------------------------------------------------
  */
-namespace Rift\Contracts\ORM;
+namespace Rift\Contracts\Database\Models;
 
 interface ModelInterface {
     const NAME = '';

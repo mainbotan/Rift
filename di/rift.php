@@ -18,10 +18,12 @@ use Predis\ClientInterface;
 use Psr\Log\LoggerInterface;
 use Rift\Contracts\Database\Bridge\PDO\ConnectorInterface;
 use Rift\Contracts\Database\Configurators\ConfiguratorInterface;
+use Rift\Contracts\Database\Migrations\DispatcherInterface;
 use Rift\Contracts\Http\RoutesBox\RoutesBoxInterface;
 use Rift\Core\Cache\Redis\RedisCacheService;
 use Rift\Core\Database\Bridge\PDO\Connector;
 use Rift\Core\Database\Configurators\Configurator;
+use Rift\Core\Database\Migrations\Dispatcher;
 use Rift\Core\Http\ResponseEmitters\CompositeEmitter;
 use Rift\Core\Http\ResponseEmitters\JsonEmitter;
 use Rift\Core\Http\ResponseEmitters\XmlEmitter;
@@ -78,6 +80,12 @@ return [
     // Schemas configurator
     ConfiguratorInterface::class => get(Configurator::class),
     Configurator::class => autowire(),
+
+    // Migration Dispatcher
+    DispatcherInterface::class => get(Dispatcher::class),
+    Dispatcher::class => autowire()
+        ->constructorParameter('dbDriver', $_ENV['DB_DRIVER'])
+        ->constructorParameter('dbName', $_ENV['DB_NAME']),
 
     /**
      * |

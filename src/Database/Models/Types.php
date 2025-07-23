@@ -1,6 +1,6 @@
 <?php
 
-namespace Rift\Core\ORM;
+namespace Rift\Core\Database\Models;
 
 class Types
 {

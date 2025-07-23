@@ -13,7 +13,7 @@ namespace Rift\Core\Repositories;
 use PDO;
 use PDOStatement;
 use PDOException;
-use Rift\Contracts\ORM\ModelInterface;
+use Rift\Contracts\Database\Models\ModelInterface;
 use Rift\Core\Databus\Operation;
 use Rift\Core\Databus\OperationOutcome;
 

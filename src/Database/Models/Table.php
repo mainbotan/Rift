@@ -1,6 +1,6 @@
 <?php
 
-namespace Rift\Core\ORM;
+namespace Rift\Core\Database\Models;
 
 final class Table
 {
@@ -23,6 +23,12 @@ final class Table
         public string $name,
         public string|int $version = '1.0.0'
     ) { }
+
+    // Validation
+    public function validation(array $validationRules): self {
+        $this->currentField['validation'] = $validationRules;
+        return $this;
+    }
 
     // Field operations
     public function create(string $fieldName): self {

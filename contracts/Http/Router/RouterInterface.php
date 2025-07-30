@@ -17,12 +17,17 @@ use Psr\Http\Message\ServerRequestInterface;
 
 interface RouterInterface {
     /**
-     * construct router
+     * Router configuration
+     * 
+     * @param RoutesBoxInterface $routesBox
+     * @param Container $container
      */
     public function __construct(RoutesBoxInterface $routesBox, Container $container);
 
     /**
-     * entrypoint of processing request
+     * Entrypoint of processing request
+     * 
+     * @param ServerRequestInterface $request
      * @return OperationOutcome
      */
     public function execute(ServerRequestInterface $request): OperationOutcome;

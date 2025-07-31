@@ -12,7 +12,7 @@
 
 namespace Rift\Validator\Types;
 
-use Rift\Core\Databus\Operation;
+use Rift\Core\Databus\Result;
 
 class StringUtils
 {
@@ -25,22 +25,22 @@ class StringUtils
         $length = mb_strlen($value);
 
         if ($length < $min) {
-            return Operation::error(Operation::HTTP_BAD_REQUEST, "$fieldName must be at least $min characters");
+            return Result::Failure(Result::HTTP_BAD_REQUEST, "$fieldName must be at least $min characters");
         }
 
         if ($length > $max) {
-            return Operation::error(Operation::HTTP_BAD_REQUEST, "$fieldName must be no more than $max characters");
+            return Result::Failure(Result::HTTP_BAD_REQUEST, "$fieldName must be no more than $max characters");
         }
 
-        return Operation::success(null);
+        return Result::Success(null);
     }
 
     public static function notEmpty(string $value, string $fieldName = 'string')
     {
         if (trim($value) === '') {
-            return Operation::error(Operation::HTTP_BAD_REQUEST, "$fieldName cannot be empty");
+            return Result::Failure(Result::HTTP_BAD_REQUEST, "$fieldName cannot be empty");
         }
 
-        return Operation::success(null);
+        return Result::Success(null);
     }
 }

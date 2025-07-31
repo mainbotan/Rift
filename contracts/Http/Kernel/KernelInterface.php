@@ -11,13 +11,13 @@
 namespace Rift\Contracts\Http\Kernel;
 
 use Psr\Http\Message\ServerRequestInterface;
-use Rift\Core\Databus\OperationOutcome;
+use Rift\Core\Databus\ResultType;
 
 interface KernelInterface {
     /**
      * handle public method
      * processing request
-     * @return OperationOutcome
+     * @return ResultType
      */
-    public function handle(ServerRequestInterface $request): OperationOutcome;
+    public function handle(ServerRequestInterface $request): ResultType;
 }

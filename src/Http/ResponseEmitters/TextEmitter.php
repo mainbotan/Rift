@@ -10,12 +10,12 @@
  */
 namespace Rift\Core\Http\ResponseEmitters;
 
-use Rift\Core\Databus\OperationOutcome;
+use Rift\Core\Databus\ResultType;
 use Rift\Core\Http\ResponseEmitters\Emitter;
 use Psr\Http\Message\ServerRequestInterface;
 
 class TextEmitter extends Emitter {
-    public function emit(OperationOutcome $outcome, ServerRequestInterface $request): void {
+    public function emit(ResultType $outcome, ServerRequestInterface $request): void {
         $this->setHeaders('text/plain');
         
         $text = sprintf(

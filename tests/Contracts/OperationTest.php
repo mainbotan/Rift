@@ -5,17 +5,17 @@ declare(strict_types=1);
 namespace Tests\Contracts;
 
 use PHPUnit\Framework\TestCase;
-use Rift\Core\Databus\Operation;
-use Rift\Core\Databus\OperationOutcome;
+use Rift\Core\Databus\Result;
+use Rift\Core\Databus\ResultType;
 
 class OperationTest extends TestCase
 {
     public function testSuccessOperationReturnsValidDTO(): void
     {
         $result = ['message' => 'OK'];
-        $response = Operation::success($result);
+        $response = Result::Success($result);
 
-        $this->assertInstanceOf(OperationOutcome::class, $response);
+        $this->assertInstanceOf(ResultType::class, $response);
         $this->assertEquals(200, $response->code);
         $this->assertSame($result, $response->result);
         $this->assertNull($response->error);
@@ -26,9 +26,9 @@ class OperationTest extends TestCase
     public function testErrorOperationReturnsValidDTO(): void
     {
         $errorMessage = 'Something broke';
-        $response = Operation::error(500, $errorMessage);
+        $response = Result::Failure(500, $errorMessage);
 
-        $this->assertInstanceOf(OperationOutcome::class, $response);
+        $this->assertInstanceOf(ResultType::class, $response);
         $this->assertEquals(500, $response->code);
         $this->assertNull($response->result);
         $this->assertEquals($errorMessage, $response->error);
@@ -37,7 +37,7 @@ class OperationTest extends TestCase
 
     public function testOperationWithDebugAndMetrics(): void
     {
-        $response = Operation::success(['ok' => true])
+        $response = Result::Success(['ok' => true])
             ->withMetric('exec_time', 100)
             ->addDebugData('sql', 'SELECT * FROM users');
 

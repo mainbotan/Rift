@@ -10,7 +10,7 @@
  */
 namespace Rift\Contracts\Http\Router;
 
-use Rift\Core\Databus\OperationOutcome;
+use Rift\Core\Databus\ResultType;
 use DI\Container;
 use Rift\Contracts\Http\RoutesBox\RoutesBoxInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -28,7 +28,7 @@ interface RouterInterface {
      * Entrypoint of processing request
      * 
      * @param ServerRequestInterface $request
-     * @return OperationOutcome
+     * @return ResultType
      */
-    public function execute(ServerRequestInterface $request): OperationOutcome;
+    public function execute(ServerRequestInterface $request): ResultType;
 }

@@ -10,8 +10,8 @@
  */
 namespace Rift\Console\Utils;
 
-use Rift\Core\Databus\Operation;
-use Rift\Core\Databus\OperationOutcome;
+use Rift\Core\Databus\Result;
+use Rift\Core\Databus\ResultType;
 use RecursiveIteratorIterator;
 use RecursiveDirectoryIterator;
 use FilesystemIterator;
@@ -25,12 +25,12 @@ class DirectoriesUtils extends Operation
     /* ===== ФАЙЛЫ ============ */
     /* ======================== */
 
-    public static function fileExists(string $path): OperationOutcome
+    public static function fileExists(string $path): ResultType
     {
         return self::success(file_exists($path) && is_file($path));
     }
 
-    public static function removeFile(string $path): OperationOutcome
+    public static function removeFile(string $path): ResultType
     {
         $exists = self::fileExists($path);
         if (!$exists->result) {
@@ -46,7 +46,7 @@ class DirectoriesUtils extends Operation
             : self::error(self::HTTP_INTERNAL_SERVER_ERROR, "Failed to remove file: {$path}");
     }
 
-    public static function copyFile(string $source, string $destination, bool $overwrite = false): OperationOutcome
+    public static function copyFile(string $source, string $destination, bool $overwrite = false): ResultType
     {
         $exists = self::fileExists($source);
         if (!$exists->result) {
@@ -75,7 +75,7 @@ class DirectoriesUtils extends Operation
         string $targetDir,
         ?string $newName = null,
         bool $overwrite = false
-    ): OperationOutcome {
+    ): ResultType {
         $sourceCheck = self::fileExists($sourceFile);
         if (!$sourceCheck->isSuccess()) {
             return $sourceCheck;
@@ -98,7 +98,7 @@ class DirectoriesUtils extends Operation
         return self::copyFile($sourceFile, $destination, $overwrite);
     }
 
-    public static function moveFile(string $source, string $destination, bool $overwrite = false): OperationOutcome
+    public static function moveFile(string $source, string $destination, bool $overwrite = false): ResultType
     {
         $sourceCheck = self::fileExists($source);
         if (!$sourceCheck->isSuccess()) {
@@ -126,7 +126,7 @@ class DirectoriesUtils extends Operation
             : self::error(self::HTTP_INTERNAL_SERVER_ERROR, "Failed to move file to: {$destination}");
     }
 
-    public static function readFileContent(string $path): OperationOutcome
+    public static function readFileContent(string $path): ResultType
     {
         $exists = self::fileExists($path);
         if (!$exists->isSuccess()) {
@@ -139,7 +139,7 @@ class DirectoriesUtils extends Operation
             : self::error(self::HTTP_INTERNAL_SERVER_ERROR, "Failed to read file: {$path}");
     }
 
-    public static function writeFileContent(string $path, string $content, bool $overwrite = false): OperationOutcome
+    public static function writeFileContent(string $path, string $content, bool $overwrite = false): ResultType
     {
         if (file_exists($path) && !$overwrite) {
             return self::error(self::HTTP_CONFLICT, "File already exists: {$path}");
@@ -162,7 +162,7 @@ class DirectoriesUtils extends Operation
     /* ===== ДИРЕКТОРИИ ======= */
     /* ======================== */
 
-    public static function getStubsDir(string $dirName): OperationOutcome
+    public static function getStubsDir(string $dirName): ResultType
     {
         $dir = dirname(__DIR__, 3);
         $path = "{$dir}/stubs/{$dirName}";
@@ -174,7 +174,7 @@ class DirectoriesUtils extends Operation
         return self::success(realpath($path));
     }
 
-    public static function createDirectory(string $path, int $mode = null): OperationOutcome
+    public static function createDirectory(string $path, int $mode = null): ResultType
     {
         if (is_dir($path)) {
             return self::success(null);
@@ -185,14 +185,14 @@ class DirectoriesUtils extends Operation
             : self::error(self::HTTP_INTERNAL_SERVER_ERROR, "Failed to create directory: {$path}");
     }
 
-    public static function createTempDirectory(string $prefix = ''): OperationOutcome
+    public static function createTempDirectory(string $prefix = ''): ResultType
     {
         $tempDir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . $prefix . uniqid();
         return self::createDirectory($tempDir)
             ->withMetric('temp_dir', $tempDir);
     }
 
-    public static function copyDirectory(string $source, string $destination, bool $overwrite = false): OperationOutcome
+    public static function copyDirectory(string $source, string $destination, bool $overwrite = false): ResultType
     {
         $source = realpath($source);
         if (!is_dir($source)) {
@@ -249,7 +249,7 @@ class DirectoriesUtils extends Operation
             );
     }
 
-    public static function cleanDirectory(string $dir): OperationOutcome
+    public static function cleanDirectory(string $dir): ResultType
     {
         if (!is_dir($dir)) {
             return self::error(self::HTTP_NOT_FOUND, "Directory does not exist: {$dir}");
@@ -305,7 +305,7 @@ class DirectoriesUtils extends Operation
             );
     }
 
-    public static function removeDirectory(string $dir): OperationOutcome
+    public static function removeDirectory(string $dir): ResultType
     {
         $cleanResult = self::cleanDirectory($dir);
         if (!$cleanResult->isSuccess()) {
@@ -317,7 +317,7 @@ class DirectoriesUtils extends Operation
             : self::error(self::HTTP_INTERNAL_SERVER_ERROR, "Failed to remove directory: {$dir}");
     }
 
-    public static function remove(string $path): OperationOutcome
+    public static function remove(string $path): ResultType
     {
         if (is_dir($path)) {
             return self::removeDirectory($path);
@@ -331,7 +331,7 @@ class DirectoriesUtils extends Operation
         return $exists;
     }
 
-    public static function isEmptyDirectory(string $dir): OperationOutcome
+    public static function isEmptyDirectory(string $dir): ResultType
     {
         if (!is_dir($dir)) {
             return self::error(self::HTTP_NOT_FOUND, "Directory does not exist: {$dir}");
@@ -341,7 +341,7 @@ class DirectoriesUtils extends Operation
         return self::success(!$iterator->valid());
     }
 
-    public static function getFilesList(string $directory, bool $recursive = true): OperationOutcome
+    public static function getFilesList(string $directory, bool $recursive = true): ResultType
     {
         if (!is_dir($directory)) {
             return self::error(self::HTTP_NOT_FOUND, "Directory does not exist: {$directory}");
@@ -361,7 +361,7 @@ class DirectoriesUtils extends Operation
         return self::success($files);
     }
 
-    public static function getDirectorySize(string $directory): OperationOutcome
+    public static function getDirectorySize(string $directory): ResultType
     {
         if (!is_dir($directory)) {
             return self::error(self::HTTP_NOT_FOUND, "Directory does not exist: {$directory}");
@@ -383,7 +383,7 @@ class DirectoriesUtils extends Operation
     /* ===== СЛУЖЕБНЫЕ ======== */
     /* ======================== */
 
-    protected static function validatePathSafety(string $targetPath, string $baseDir): OperationOutcome
+    protected static function validatePathSafety(string $targetPath, string $baseDir): ResultType
     {
         $realBaseDir = realpath($baseDir);
         $realTargetPath = realpath(dirname($targetPath));

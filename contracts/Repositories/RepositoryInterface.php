@@ -10,7 +10,7 @@
  */
 namespace Rift\Contracts\Repositories;
 
-use Rift\Core\Databus\OperationOutcome;
+use Rift\Core\Databus\ResultType;
 
 
 interface RepositoryInterface {

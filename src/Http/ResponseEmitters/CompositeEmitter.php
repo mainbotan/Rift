@@ -10,7 +10,7 @@
  */
 namespace Rift\Core\Http\ResponseEmitters;
 
-use Rift\Core\Databus\OperationOutcome;
+use Rift\Core\Databus\ResultType;
 use Rift\Contracts\Http\ResponseEmitter\EmitterInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -20,7 +20,7 @@ class CompositeEmitter implements EmitterInterface {
         private array $emitters
     ) {}
 
-    public function emit(OperationOutcome $outcome, ServerRequestInterface $request): void {
+    public function emit(ResultType $outcome, ServerRequestInterface $request): void {
         $acceptHeader = $request->getHeaderLine('HTTP_ACCEPT') ?? 'application/json';
         
         foreach ($this->emitters as $emitter) {

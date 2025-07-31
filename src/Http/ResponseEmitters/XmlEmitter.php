@@ -11,12 +11,12 @@
 namespace Rift\Core\Http\ResponseEmitters;
 
 use SimpleXMLElement;
-use Rift\Core\Databus\OperationOutcome;
+use Rift\Core\Databus\ResultType;
 use Rift\Core\Http\ResponseEmitters\Emitter;
 use Psr\Http\Message\ServerRequestInterface;
 
 class XmlEmitter extends Emitter {
-    public function emit(OperationOutcome $outcome, ServerRequestInterface $request): void {
+    public function emit(ResultType $outcome, ServerRequestInterface $request): void {
         $this->setHeaders('application/xml');
         
         $xml = new SimpleXMLElement('<response/>');

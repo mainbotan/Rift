@@ -11,8 +11,8 @@
 namespace Rift\Contracts\Handlers;
 
 use Psr\Http\Message\ServerRequestInterface;
-use Rift\Core\Databus\OperationOutcome;
+use Rift\Core\Databus\ResultType;
 
 interface HandlerInterface {
-    public function execute(ServerRequestInterface $request): OperationOutcome;
+    public function execute(ServerRequestInterface $request): ResultType;
 }

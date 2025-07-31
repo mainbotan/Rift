@@ -10,11 +10,11 @@
  */
 namespace Rift\Contracts\Database\Migrations;
 
-use Rift\Core\Databus\OperationOutcome;
+use Rift\Core\Databus\ResultType;
 
 interface DispatcherInterface {
 
-    public function configure(): OperationOutcome;
+    public function configure(): ResultType;
 
     public function model(string $modelLink): self;
 

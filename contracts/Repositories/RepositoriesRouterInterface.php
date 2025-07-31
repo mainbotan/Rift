@@ -11,7 +11,7 @@
 namespace Rift\Contracts\Repositories;
 
 use Rift\Contracts\Database\Bridge\PDO\ConnectorInterface;
-use Rift\Core\Databus\OperationOutcome;
+use Rift\Core\Databus\ResultType;
 
 interface RepositoriesRouterInterface {
     public function __construct(ConnectorInterface $connector);

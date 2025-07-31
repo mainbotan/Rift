@@ -4,8 +4,8 @@ namespace Rift\Core\Cache\Redis;
 
 use Predis\ClientInterface;
 use Rift\Contracts\Cache\CacheInterface;
-use Rift\Core\Databus\Operation;
-use Rift\Core\Databus\OperationOutcome;
+use Rift\Core\Databus\Result;
+use Rift\Core\Databus\ResultType;
 
 class RedisCacheService implements CacheInterface
 {
@@ -13,17 +13,17 @@ class RedisCacheService implements CacheInterface
         private ClientInterface $redis
     ) {}
 
-    public function get(string $key): OperationOutcome
+    public function get(string $key): ResultType
     {
         try {
             $value = $this->redis->get($key);
-            return Operation::success($value);
+            return Result::Success($value);
         } catch (\Exception $e) {
             return $this->wrapException($e, 'GET operation failed');
         }
     }
 
-    public function set(string $key, mixed $value, ?int $ttl = null): OperationOutcome
+    public function set(string $key, mixed $value, ?int $ttl = null): ResultType
     {
         try {
             if ($ttl !== null) {
@@ -31,82 +31,82 @@ class RedisCacheService implements CacheInterface
             } else {
                 $result = $this->redis->set($key, $value);
             }
-            return Operation::success((bool)$result);
+            return Result::Success((bool)$result);
         } catch (\Exception $e) {
             return $this->wrapException($e, 'SET operation failed');
         }
     }
 
-    public function delete(string|array $keys): OperationOutcome
+    public function delete(string|array $keys): ResultType
     {
         try {
             $count = $this->redis->del((array)$keys);
-            return Operation::success($count);
+            return Result::Success($count);
         } catch (\Exception $e) {
             return $this->wrapException($e, 'DEL operation failed');
         }
     }
 
-    public function has(string $key): OperationOutcome
+    public function has(string $key): ResultType
     {
         try {
-            return Operation::success((bool)$this->redis->exists($key));
+            return Result::Success((bool)$this->redis->exists($key));
         } catch (\Exception $e) {
             return $this->wrapException($e, 'EXISTS operation failed');
         }
     }
 
-    public function expire(string $key, int $ttl): OperationOutcome
+    public function expire(string $key, int $ttl): ResultType
     {
         try {
-            return Operation::success((bool)$this->redis->expire($key, $ttl));
+            return Result::Success((bool)$this->redis->expire($key, $ttl));
         } catch (\Exception $e) {
             return $this->wrapException($e, 'EXPIRE operation failed');
         }
     }
 
-    public function increment(string $key, int $by = 1): OperationOutcome
+    public function increment(string $key, int $by = 1): ResultType
     {
         try {
-            return Operation::success($this->redis->incrby($key, $by));
+            return Result::Success($this->redis->incrby($key, $by));
         } catch (\Exception $e) {
             return $this->wrapException($e, 'INCR operation failed');
         }
     }
 
-    public function ttl(string $key): OperationOutcome
+    public function ttl(string $key): ResultType
     {
         try {
-            return Operation::success($this->redis->ttl($key));
+            return Result::Success($this->redis->ttl($key));
         } catch (\Exception $e) {
             return $this->wrapException($e, 'TTL operation failed');
         }
     }
 
-    public function hSet(string $hash, string $field, mixed $value): OperationOutcome
+    public function hSet(string $hash, string $field, mixed $value): ResultType
     {
         try {
-            return Operation::success((bool)$this->redis->hset($hash, $field, $value));
+            return Result::Success((bool)$this->redis->hset($hash, $field, $value));
         } catch (\Exception $e) {
             return $this->wrapException($e, 'HSET operation failed');
         }
     }
 
-    public function hGet(string $hash, string $field): OperationOutcome
+    public function hGet(string $hash, string $field): ResultType
     {
         try {
-            return Operation::success($this->redis->hget($hash, $field));
+            return Result::Success($this->redis->hget($hash, $field));
         } catch (\Exception $e) {
             return $this->wrapException($e, 'HGET operation failed');
         }
     }
 
-    public function pipeline(callable $callback): OperationOutcome
+    public function pipeline(callable $callback): ResultType
     {
         try {
             $pipeline = $this->redis->pipeline();
             $callback($pipeline);
-            return Operation::success($pipeline->execute());
+            return Result::Success($pipeline->execute());
         } catch (\Exception $e) {
             return $this->wrapException($e, 'Pipeline execution failed');
         }
@@ -117,10 +117,10 @@ class RedisCacheService implements CacheInterface
         return $this->redis;
     }
 
-    private function wrapException(\Exception $e, string $context): OperationOutcome
+    private function wrapException(\Exception $e, string $context): ResultType
     {
-        return Operation::error(
-            Operation::HTTP_INTERNAL_SERVER_ERROR,
+        return Result::Failure(
+            Result::HTTP_INTERNAL_SERVER_ERROR,
             'Redis error: ' . $context,
             [
                 'exception' => [

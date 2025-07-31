@@ -11,8 +11,8 @@
 namespace Rift\Contracts\Middlewares;
 
 use Psr\Http\Message\ServerRequestInterface;
-use Rift\Core\Databus\OperationOutcome;
+use Rift\Core\Databus\ResultType;
 
 interface MiddlewareInterface {
-    public function execute(ServerRequestInterface $request): OperationOutcome;
+    public function execute(ServerRequestInterface $request): ResultType;
 }

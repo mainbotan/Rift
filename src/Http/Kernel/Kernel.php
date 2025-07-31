@@ -12,8 +12,8 @@ namespace Rift\Core\Http\Kernel;
 
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Rift\Core\Databus\Operation;
-use Rift\Core\Databus\OperationOutcome;
+use Rift\Core\Databus\Result;
+use Rift\Core\Databus\ResultType;
 use Rift\Contracts\Http\Kernel\KernelInterface;
 use Rift\Contracts\Http\Request\RequestInterface;
 use Rift\Contracts\Http\ResponseEmitter\EmitterInterface;
@@ -37,20 +37,20 @@ class Kernel implements KernelInterface {
     /**
      * Starting the request processing process
      * @param RequestInterface
-     * @return OperationOutcome
+     * @return ResultType
      */
-    public function handle(ServerRequestInterface $request): OperationOutcome {
+    public function handle(ServerRequestInterface $request): ResultType {
         try {
             $result = $this->container->get(RouterInterface::class)->execute($request);
             
-            if (!$result instanceof OperationOutcome) {
-                $result = Operation::error(
-                    Operation::HTTP_INTERNAL_SERVER_ERROR,
+            if (!$result instanceof ResultType) {
+                $result = Result::Failure(
+                    Result::HTTP_INTERNAL_SERVER_ERROR,
                     'Router returned invalid response type'
                 );
             }
         } catch (\Exception $e) {
-            $result = Operation::error(Operation::HTTP_INTERNAL_SERVER_ERROR, "The router is not registered in the di config: {$e->getMessage()}");
+            $result = Result::Failure(Result::HTTP_INTERNAL_SERVER_ERROR, "The router is not registered in the di config: {$e->getMessage()}");
         } 
         $this->emit($result, $request);
         return $result;
@@ -58,11 +58,11 @@ class Kernel implements KernelInterface {
 
     /**
      * Output of the execution result
-     * @param OperationOutcome $result
+     * @param ResultType $result
      * @param RequestInterface $request
      * @return void
      */
-    protected function emit(OperationOutcome $result, ServerRequestInterface $request): void {
+    protected function emit(ResultType $result, ServerRequestInterface $request): void {
         $this->container->get(EmitterInterface::class)->emit($result, $request);
     }
 }

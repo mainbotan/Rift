@@ -3,8 +3,8 @@
 namespace Rift\Core\Database\Models;
 
 use Rift\Contracts\Database\Models\ModelInterface;
-use Rift\Core\Databus\Operation;
-use Rift\Core\Databus\OperationOutcome;
+use Rift\Core\Databus\Result;
+use Rift\Core\Databus\ResultType;
 use Rift\Validator\SchemaValidator;
 
 abstract class Model implements ModelInterface 
@@ -23,7 +23,7 @@ abstract class Model implements ModelInterface
 
     // ***** VALIDATION *****
     
-    public function validate(array $data): OperationOutcome {
+    public function validate(array $data): ResultType {
         $rules = [];
         foreach ($this->table->fields as $field) {
             if (isset($field['validation'])) {
@@ -33,9 +33,9 @@ abstract class Model implements ModelInterface
         return SchemaValidator::validate($rules, $data);
     }
 
-    public function validateField(string $fieldName, mixed $value): OperationOutcome {
+    public function validateField(string $fieldName, mixed $value): ResultType {
         if (!isset($this->table->fields[$fieldName]['validation'])) {
-            return Operation::success(null);
+            return Result::Success(null);
         }
         return SchemaValidator::validate(
             [$fieldName => $this->table->fields[$fieldName]['validation']], 

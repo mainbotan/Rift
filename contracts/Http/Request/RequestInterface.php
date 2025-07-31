@@ -11,12 +11,12 @@
 namespace Rift\Contracts\Http\Request;
 
 use Psr\Http\Message\ServerRequestInterface;
-use Rift\Core\Databus\OperationOutcome;
+use Rift\Core\Databus\ResultType;
 
 interface RequestInterface {
     /**
      * Getting PSR-7 request object
-     * @return OperationOutcome - requestObject in result field 
+     * @return ResultType - requestObject in result field 
      */
-    public static function fromGlobals(): OperationOutcome;
+    public static function fromGlobals(): ResultType;
 }

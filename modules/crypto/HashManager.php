@@ -2,8 +2,8 @@
 
 namespace Rift\Crypto;
 
-use Rift\Core\Databus\Operation;
-use Rift\Core\Databus\OperationOutcome;
+use Rift\Core\Databus\Result;
+use Rift\Core\Databus\ResultType;
 
 class HashManager
 {

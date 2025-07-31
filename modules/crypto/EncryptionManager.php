@@ -1,8 +1,8 @@
 <?php
 namespace Rift\Crypto;
 
-use Rift\Core\Databus\Operation;
-use Rift\Core\Databus\OperationOutcome;
+use Rift\Core\Databus\Result;
+use Rift\Core\Databus\ResultType;
 
 class EncryptionManager
 {
@@ -12,19 +12,19 @@ class EncryptionManager
         private string $key
     ) {
         if (!in_array($this->cipher, openssl_get_cipher_methods())) {
-            return Operation::error(
-                Operation::HTTP_INTERNAL_SERVER_ERROR,
+            return Result::Failure(
+                Result::HTTP_INTERNAL_SERVER_ERROR,
                 'Unsupported cipher: ' . $this->cipher
             );
         }
     }
 
-    public function encrypt(string $data): OperationOutcome
+    public function encrypt(string $data): ResultType
     {
         $key = $this->key;
         if (strlen($key) < 32) {
-            return Operation::error(
-                Operation::HTTP_BAD_REQUEST,
+            return Result::Failure(
+                Result::HTTP_BAD_REQUEST,
                 'Encryption key must be at least 32 characters'
             );
         }
@@ -39,10 +39,10 @@ class EncryptionManager
                 $iv
             );
 
-            return Operation::success(base64_encode($iv . $encrypted));
+            return Result::Success(base64_encode($iv . $encrypted));
         } catch (\Throwable $e) {
-            return Operation::error(
-                Operation::HTTP_INTERNAL_SERVER_ERROR,
+            return Result::Failure(
+                Result::HTTP_INTERNAL_SERVER_ERROR,
                 'Encryption failed',
                 [
                     'debug' => $e->getMessage(),
@@ -53,7 +53,7 @@ class EncryptionManager
         }
     }
 
-    public function decrypt(string $encrypted): OperationOutcome
+    public function decrypt(string $encrypted): ResultType
     {
         $key = $this->key;
         try {
@@ -71,15 +71,15 @@ class EncryptionManager
             );
 
             return $result !== false
-                ? Operation::success($result)
-                : Operation::error(
-                    Operation::HTTP_BAD_REQUEST,
+                ? Result::Success($result)
+                : Result::Failure(
+                    Result::HTTP_BAD_REQUEST,
                     'Decryption failed - invalid data or key',
                     ['openssl_error' => openssl_error_string()]
                 );
         } catch (\Throwable $e) {
-            return Operation::error(
-                Operation::HTTP_INTERNAL_SERVER_ERROR,
+            return Result::Failure(
+                Result::HTTP_INTERNAL_SERVER_ERROR,
                 'Decryption failed',
                 [
                     'debug' => $e->getMessage(),

@@ -10,15 +10,15 @@
  */
 namespace Rift\Contracts\Database\Configurators;
 
-use Rift\Core\Databus\OperationOutcome;
+use Rift\Core\Databus\ResultType;
 
 interface ConfiguratorInterface {
     /**
      * configure public method
      * configure database schema
-     * @return OperationOutcome
+     * @return ResultType
      */
-    public function configure(): OperationOutcome;
+    public function configure(): ResultType;
 
     public static function registerTenantModel(string $modelClass): void;
 

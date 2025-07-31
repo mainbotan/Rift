@@ -10,13 +10,13 @@
  */
 namespace Rift\Contracts\Database\Bridge\PDO;
 
-use Rift\Core\Databus\OperationOutcome;
+use Rift\Core\Databus\ResultType;
 
 interface ConnectorInterface {
     
     public static function fromEnv(array $env): self;
 
-    public function createAdminConnection(): OperationOutcome;
+    public function createAdminConnection(): ResultType;
 
-    public function createSchemaConnection(string $schema): OperationOutcome;
+    public function createSchemaConnection(string $schema): ResultType;
 }

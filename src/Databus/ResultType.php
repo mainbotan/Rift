@@ -132,7 +132,7 @@ final class ResultType
         int $flags = JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE
     ): string {
         $data = $transformer ? $transformer($this) : [
-            'status' => $this->isSuccess() ? 'success' : 'error',
+            'status' => $this->isSuccess(),
             'code' => $this->code,
             'result' => $this->result,
             'error' => $this->error,

@@ -10,12 +10,12 @@
  */
 namespace Rift\Contracts\Validators;
 
-use Rift\Core\Databus\OperationOutcome;
+use Rift\Core\Databus\ResultType;
 
 interface ValidatorInterface {
     /**
      * validate public method
-     * @return OperationOutcome
+     * @return ResultType
      */
-    public function validate(array $data): OperationOutcome;
+    public function validate(array $data): ResultType;
 }

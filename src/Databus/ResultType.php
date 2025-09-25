@@ -4,17 +4,18 @@
  * |
  * This file is a component of the Rift Miniframework core <v 1.0.0>
  * |
- * The OperationOucome object + methods for processing it.
+ * The ResultType object + methods for processing it.
  * |
  * |--------------------------------------------------------------------------
  */
 namespace Rift\Core\Databus;
 
-final class OperationOutcome
+final class ResultType
 {
-    use OperationOutcomeTrait;
+    use ResultTypeTrait;
 
     public function __construct(
+        public bool $status,
         public int $code,
         public mixed $result,
         public ?string $error = null,
@@ -43,10 +44,7 @@ final class OperationOutcome
     }
 
     public function isSuccess() {
-        if ($this->code === 200 or $this->code === 201 or $this->code === 202) {
-            return true;
-        }
-        return false;
+        return $this->status;
     }
 
     /**
@@ -105,7 +103,7 @@ final class OperationOutcome
             return $this;
         }
         if (!$predicate($this->result)) {
-            return new self($errorCode, null, $errorMessage, $this->meta);
+            return new self(false, $errorCode, null, $errorMessage, $this->meta);
         }
         return $this;
     }
@@ -113,7 +111,7 @@ final class OperationOutcome
     /**
      * Комбинирует два OperationOutcome (аналог zip)
      */
-    public function merge(OperationOutcome $other, callable $merger): self
+    public function merge(ResultType $other, callable $merger): self
     {
         if (!$this->isSuccess()) {
             return $this;
@@ -134,7 +132,8 @@ final class OperationOutcome
         int $flags = JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE
     ): string {
         $data = $transformer ? $transformer($this) : [
-            'status' => $this->isSuccess() ? 'success' : 'error',
+            'status' => $this->isSuccess(),
+            'code' => $this->code,
             'result' => $this->result,
             'error' => $this->error,
             'meta' => $this->meta

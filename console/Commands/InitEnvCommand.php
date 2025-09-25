@@ -16,8 +16,8 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Rift\Console\Utils\DirectoriesUtils;
 use Symfony\Component\Console\Input\InputOption;
 
-use Rift\Core\Databus\Operation;
-use Rift\Core\Databus\OperationOutcome;
+use Rift\Core\Databus\Result;
+use Rift\Core\Databus\ResultType;
 
 class InitEnvCommand extends Command
 {
@@ -69,7 +69,7 @@ class InitEnvCommand extends Command
                 "<comment>{$copyResult->error}</comment>"
             ]);
             
-            if ($copyResult->code === Operation::HTTP_CONFLICT) {
+            if ($copyResult->code === Result::HTTP_CONFLICT) {
                 $output->writeln("<info>Use --force option to overwrite existing file</info>");
             }
             

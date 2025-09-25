@@ -4,8 +4,8 @@ namespace Rift\Crypto;
 
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
-use Rift\Core\Databus\Operation;
-use Rift\Core\Databus\OperationOutcome;
+use Rift\Core\Databus\Result;
+use Rift\Core\Databus\ResultType;
 
 class JwtManager
 {
@@ -19,8 +19,8 @@ class JwtManager
         string $algorithm = 'HS256'
     ) {
         if (!in_array($algorithm, ['HS256', 'HS384', 'HS512'])) {
-            return Operation::error(
-                Operation::HTTP_INTERNAL_SERVER_ERROR,
+            return Result::Failure(
+                Result::HTTP_INTERNAL_SERVER_ERROR,
                 'Unsupported JWT algorithm'
             );
         }
@@ -29,7 +29,7 @@ class JwtManager
         $this->algorithm = $algorithm;
     }
 
-    public function encode(array $payload, ?int $ttl = null): OperationOutcome
+    public function encode(array $payload, ?int $ttl = null): ResultType
     {
         try {
             $payload = array_merge($payload, [
@@ -38,39 +38,39 @@ class JwtManager
                 'jti' => bin2hex(random_bytes(16))
             ]);
 
-            return Operation::success(JWT::encode($payload, $this->secretKey, $this->algorithm));
+            return Result::Success(JWT::encode($payload, $this->secretKey, $this->algorithm));
         } catch (\Exception $e) {
-            return Operation::error(Operation::HTTP_BAD_REQUEST, $e->getMessage());
+            return Result::Failure(Result::HTTP_BAD_REQUEST, $e->getMessage());
         }
     }
 
-    public function decode(string $token): OperationOutcome
+    public function decode(string $token): ResultType
     {
         try {
-            return Operation::success(
+            return Result::Success(
                 (array) JWT::decode($token, new Key($this->secretKey, $this->algorithm))
             );
         } catch (\Exception $e) {
-            return Operation::error(Operation::HTTP_BAD_REQUEST, $e->getMessage());
+            return Result::Failure(Result::HTTP_BAD_REQUEST, $e->getMessage());
         }
     }
 
-    public function validate(string $token): OperationOutcome
+    public function validate(string $token): ResultType
     {
         try {
             $this->decode($token);
-            return Operation::success(true);
+            return Result::Success(true);
         } catch (\Exception $e) {
-            return Operation::error(Operation::HTTP_INTERNAL_SERVER_ERROR, $e->getMessage());
+            return Result::Failure(Result::HTTP_INTERNAL_SERVER_ERROR, $e->getMessage());
         }
     }
 
-    public function checkExpiration(array $decodedToken): OperationOutcome
+    public function checkExpiration(array $decodedToken): ResultType
     {
         try {
             if (!isset($decodedToken['exp'])) {
-                return Operation::error(
-                    Operation::HTTP_BAD_REQUEST,
+                return Result::Failure(
+                    Result::HTTP_BAD_REQUEST,
                     'Token does not contain expiration time'
                 );
             }
@@ -79,8 +79,8 @@ class JwtManager
             $expirationTime = $decodedToken['exp'];
 
             if ($currentTime > $expirationTime) {
-                return Operation::error(
-                    Operation::HTTP_UNAUTHORIZED,
+                return Result::Failure(
+                    Result::HTTP_UNAUTHORIZED,
                     'Token has expired',
                     ['expired_at' => $expirationTime]
                 );
@@ -88,14 +88,14 @@ class JwtManager
 
             $remainingTime = $expirationTime - $currentTime;
 
-            return Operation::success([
+            return Result::Success([
                 'is_valid' => true,
                 'remaining_seconds' => $remainingTime,
                 'expires_at' => $expirationTime
             ]);
         } catch (\Exception $e) {
-            return Operation::error(
-                Operation::HTTP_INTERNAL_SERVER_ERROR,
+            return Result::Failure(
+                Result::HTTP_INTERNAL_SERVER_ERROR,
                 'Failed to check token expiration: ' . $e->getMessage()
             );
         }

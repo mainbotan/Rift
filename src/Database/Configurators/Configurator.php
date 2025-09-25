@@ -14,8 +14,8 @@ use PDO;
 use PDOException;
 use PDOStatement;
 use PHPUnit\Framework\Constraint\Operator;
-use Rift\Core\Databus\Operation;
-use Rift\Core\Databus\OperationOutcome;
+use Rift\Core\Databus\Result;
+use Rift\Core\Databus\ResultType;
 use Rift\Contracts\Database\Bridge\PDO\ConnectorInterface;
 use Rift\Contracts\Database\Configurators\ConfiguratorInterface;
 use Rift\Core\ORM\Versioning\VersionModel;
@@ -71,11 +71,11 @@ final class Configurator implements ConfiguratorInterface
         return $this;
     }
 
-    public function configure(): OperationOutcome
+    public function configure(): ResultType
     {
         if (empty($this->targetSchema)) {
-            return Operation::error(
-                Operation::HTTP_BAD_REQUEST,
+            return Result::Failure(
+                Result::HTTP_BAD_REQUEST,
                 'Schema must be specified'
             );
         }
@@ -92,8 +92,8 @@ final class Configurator implements ConfiguratorInterface
             return $this->migrateModels($this->targetSchema, $models);
 
         } catch (PDOException $e) {
-            return Operation::error(
-                Operation::HTTP_INTERNAL_SERVER_ERROR,
+            return Result::Failure(
+                Result::HTTP_INTERNAL_SERVER_ERROR,
                 "Schema configuration failed for '{$this->targetSchema}'",
                 [
                     'error' => $e->getMessage(),
@@ -126,10 +126,10 @@ final class Configurator implements ConfiguratorInterface
         $adminPdo->exec($sql);
     }
 
-    private function migrateModels(string $schema, array $models): OperationOutcome
+    private function migrateModels(string $schema, array $models): ResultType
     {
         if (empty($models)) {
-            return Operation::success(
+            return Result::Success(
                 "No models to migrate for schema '{$schema}'"
             );
         }
@@ -141,8 +141,8 @@ final class Configurator implements ConfiguratorInterface
                         $pdo->exec($this->versionModel->migrate());
                     }
                 } catch (PDOException $e) {
-                    return Operation::error(
-                        Operation::HTTP_INTERNAL_SERVER_ERROR,
+                    return Result::Failure(
+                        Result::HTTP_INTERNAL_SERVER_ERROR,
                         "Error initializing the schema version table.",
                         [
                             'error' => $e->getMessage(),
@@ -163,25 +163,25 @@ final class Configurator implements ConfiguratorInterface
                                     $pdo->exec($model->migrate());
                                     return $versionRepository->createTable($model::NAME, $model::VERSION)
                                         ->then(function() use ($model, $currentTableVersion) {
-                                            return Operation::success("Table created and version recorded");
+                                            return Result::Success("Table created and version recorded");
                                         });
                                 } else {
                                     if ($currentTableVersion !== $model::VERSION) {
                                         $pdo->exec($model->migrate());
                                         return $versionRepository->updateTable($model::NAME, $model::VERSION)
                                             ->then(function() use ($model, $currentTableVersion) {
-                                                return Operation::success("Table altered and version updated");
+                                                return Result::Success("Table altered and version updated");
                                             });
                                     }
-                                    return Operation::success("No migration needed - version is current");
+                                    return Result::Success("No migration needed - version is current");
                                 }
                             })
-                            ->catch(function(OperationOutcome $error) {
+                            ->catch(function(ResultType $error) {
                                 return $error;
                             });
                     } catch (PDOException $e) {
-                        return Operation::error(
-                            Operation::HTTP_INTERNAL_SERVER_ERROR,
+                        return Result::Failure(
+                            Result::HTTP_INTERNAL_SERVER_ERROR,
                             "Migration failed for model: {$model}",
                             [
                                 'model' => $model,
@@ -191,10 +191,10 @@ final class Configurator implements ConfiguratorInterface
                         );
                     }
                 }
-                return Operation::success(null);
+                return Result::Success(null);
             })
             ->then(function() use ($schema, $models) {
-                return Operation::success(
+                return Result::Success(
                     "Schema '{$schema}' configured with " . count($models) . " models"
                 );
             });

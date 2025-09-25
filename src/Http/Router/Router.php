@@ -14,8 +14,8 @@ use Psr\Container\ContainerInterface;
 use Rift\Contracts\Http\Router\RouterInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Rift\Contracts\Http\RoutesBox\RoutesBoxInterface;
-use Rift\Core\Databus\Operation;
-use Rift\Core\Databus\OperationOutcome;
+use Rift\Core\Databus\Result;
+use Rift\Core\Databus\ResultType;
 
 /**
  * @package Rift\Core\Http\Router
@@ -48,9 +48,9 @@ class Router implements RouterInterface
     
     /**
      * @param ServerRequestInterface $request
-     * @return OperationOutcome 
+     * @return ResultType 
      */
-    public function execute(ServerRequestInterface $request): OperationOutcome
+    public function execute(ServerRequestInterface $request): ResultType
     {
         $path = $request->getUri()->getPath();
         $method = strtoupper($request->getMethod());
@@ -90,7 +90,7 @@ class Router implements RouterInterface
             return $this->dispatchToHandler($route['handler'], $request);
         }
 
-        return Operation::error(Operation::HTTP_NOT_FOUND, 'Path not found');
+        return Result::Failure(Result::HTTP_NOT_FOUND, 'Path not found');
     }
 
     /**
@@ -136,13 +136,13 @@ class Router implements RouterInterface
      * Middlewares chain processing
      * @param array @middlewares
      * @param ServerRequestInterface $request
-     * @return OperationOutcome @result
+     * @return ResultType @result
      */
-    private function processMiddlewares(array $middlewares, ServerRequestInterface $request): OperationOutcome
+    private function processMiddlewares(array $middlewares, ServerRequestInterface $request): ResultType
     {
         foreach ($middlewares as $middleware) {
             if (!class_exists($middleware)) {
-                return Operation::error(Operation::HTTP_INTERNAL_SERVER_ERROR, "Middleware class {$middleware} not found");
+                return Result::Failure(Result::HTTP_INTERNAL_SERVER_ERROR, "Middleware class {$middleware} not found");
             }
             
             $result = $this->container->get($middleware)->execute($request);
@@ -153,7 +153,7 @@ class Router implements RouterInterface
             $request = $result->result ?? $request;
         }
         
-        return Operation::success($request);
+        return Result::Success($request);
     }
 
     /**
@@ -163,20 +163,20 @@ class Router implements RouterInterface
      * 
      * @param string $handler - Link to handler class
      * @param ServerRequestInterface $request
-     * @return OperationOutcome
+     * @return ResultType
      */
-    private function dispatchToHandler(string $handler, ServerRequestInterface $request): OperationOutcome
+    private function dispatchToHandler(string $handler, ServerRequestInterface $request): ResultType
     {
         if (empty($handler)) {
-            return Operation::error(Operation::HTTP_INTERNAL_SERVER_ERROR, 'Path handler not found');
+            return Result::Failure(Result::HTTP_INTERNAL_SERVER_ERROR, 'Path handler not found');
         }
 
         try {
             $handlerInstance = $this->container->get($handler);
             return $handlerInstance->execute($request);
         } catch (\Throwable $e) {
-            return Operation::error(
-                Operation::HTTP_INTERNAL_SERVER_ERROR, 
+            return Result::Failure(
+                Result::HTTP_INTERNAL_SERVER_ERROR, 
                 "Invalid path handler: {$e->getMessage()}",
                 ['debug' => ['trace' => $e->getTraceAsString()]]
             );

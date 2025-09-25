@@ -11,8 +11,8 @@
 namespace Rift\Core\Http\RoutesBox;
 
 use Rift\Contracts\Http\RoutesBox\RoutesBoxInterface;
-use Rift\Core\Databus\Operation;
-use Rift\Core\Databus\OperationOutcome;
+use Rift\Core\Databus\Result;
+use Rift\Core\Databus\ResultType;
 
 class RoutesBox implements RoutesBoxInterface {
     protected array $routes = [];

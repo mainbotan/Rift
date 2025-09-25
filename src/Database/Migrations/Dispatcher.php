@@ -8,8 +8,8 @@ use Rift\Contracts\Database\Bridge\PDO\ConnectorInterface;
 use Rift\Contracts\Database\Migrations\DispatcherInterface;
 use Rift\Core\Database\Models\Versioning\VersionModel;
 use Rift\Core\Database\Models\Versioning\VersionRepository;
-use Rift\Core\Databus\Operation;
-use Rift\Core\Databus\OperationOutcome;
+use Rift\Core\Databus\Result;
+use Rift\Core\Databus\ResultType;
 
 final class Dispatcher implements DispatcherInterface {
     
@@ -56,7 +56,7 @@ final class Dispatcher implements DispatcherInterface {
 
     // *****CONFIGURATION PROCESS*****
 
-    public function configure(): OperationOutcome 
+    public function configure(): ResultType 
     {
         return $this->createSchema()
             ->then(fn() => $this->saveSchemaConnection())
@@ -65,7 +65,7 @@ final class Dispatcher implements DispatcherInterface {
             ->then(fn() => $this->migrateModels());
     }
 
-    private function createSchema(): OperationOutcome
+    private function createSchema(): ResultType
     {
         return $this->connector->createAdminConnection()
             ->then(function ($pdo) {
@@ -76,32 +76,32 @@ final class Dispatcher implements DispatcherInterface {
                 };
                 try {
                     $pdo->exec($sql);
-                    return Operation::success("Schema {$this->schema} created.");
+                    return Result::Success("Schema {$this->schema} created.");
                 } catch (PDOException $e) {
-                    return Operation::error(Operation::HTTP_INTERNAL_SERVER_ERROR, "Schema deployment error.", [
+                    return Result::Failure(Result::HTTP_INTERNAL_SERVER_ERROR, "Schema deployment error.", [
                         'exception' => $e
                     ]);
                 }
             });
     }
-    private function saveSchemaConnection(): OperationOutcome
+    private function saveSchemaConnection(): ResultType
     {
         return $this->connector->createSchemaConnection($this->schema)
             ->then(function (PDO $pdo) {
                 $this->schemaConnection = $pdo;
-                return Operation::success("Schema connection saved");
+                return Result::Success("Schema connection saved");
             });
     }
-    private function migrateVersionsModel(): OperationOutcome 
+    private function migrateVersionsModel(): ResultType 
     {   
         try {
             $this->schemaConnection->beginTransaction();
             $this->schemaConnection->exec($this->versionModel->migrate());
             $this->schemaConnection->commit();
-            return Operation::success("Versions table created.");
+            return Result::Success("Versions table created.");
         } catch (PDOException $e) {
             $this->schemaConnection->rollBack();
-            return Operation::error(Operation::HTTP_INTERNAL_SERVER_ERROR, "Error in creating a version table for schema {$this->schema}", [
+            return Result::Failure(Result::HTTP_INTERNAL_SERVER_ERROR, "Error in creating a version table for schema {$this->schema}", [
                 'exception' => $e
             ]);
         }
@@ -113,7 +113,7 @@ final class Dispatcher implements DispatcherInterface {
         );
     }
 
-    private function migrateModels(): OperationOutcome
+    private function migrateModels(): ResultType
     {
         foreach ($this->models as $model) {
             $model = new $model;
@@ -131,7 +131,7 @@ final class Dispatcher implements DispatcherInterface {
                     $this->versionRepository->createTable($modelName, $modelVersion);
                     $this->logs[$modelName] = "init version tag for {$modelName} {$modelVersion}";
                 } catch (PDOException $e) {
-                    return Operation::error(Operation::HTTP_INTERNAL_SERVER_ERROR, "Error migrate model {$modelName}:{$modelVersion}", [
+                    return Result::Failure(Result::HTTP_INTERNAL_SERVER_ERROR, "Error migrate model {$modelName}:{$modelVersion}", [
                         'exception' => $e
                     ]);
                 }
@@ -143,12 +143,12 @@ final class Dispatcher implements DispatcherInterface {
                     $this->versionRepository->updateTable($modelName, $modelVersion);
                     $this->logs[$modelName] = "from version {$currentTableVersion} to {$modelVersion}";
                 } catch (PDOException $e) {
-                    return Operation::error(Operation::HTTP_INTERNAL_SERVER_ERROR, "Error migrate model {$modelName}:{$modelVersion}", [
+                    return Result::Failure(Result::HTTP_INTERNAL_SERVER_ERROR, "Error migrate model {$modelName}:{$modelVersion}", [
                         'exception' => $e
                     ]);
                 }
             }
         }
-        return Operation::success("Successful migration.");
+        return Result::Success("Successful migration.");
     }
 }

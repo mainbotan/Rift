@@ -14,8 +14,8 @@ use PDO;
 use PDOStatement;
 use PDOException;
 use Rift\Contracts\Database\Models\ModelInterface;
-use Rift\Core\Databus\Operation;
-use Rift\Core\Databus\OperationOutcome;
+use Rift\Core\Databus\Result;
+use Rift\Core\Databus\ResultType;
 
 abstract class Repository
 {
@@ -28,9 +28,9 @@ abstract class Repository
      * Universal query execution method
      * 
      * @param PDOStatement $stmt
-     * @return OperationOutcome $result
+     * @return ResultType $result
      */
-    protected function executeQuery(PDOStatement $stmt): OperationOutcome
+    protected function executeQuery(PDOStatement $stmt): ResultType
     {
         try {
             $stmt->execute();
@@ -46,9 +46,9 @@ abstract class Repository
      * Determines the response type based on the request made
      * 
      * @param PDOStatement $stmt
-     * @return OperationOutcome $result
+     * @return ResultType $result
      */
-    private function determineOperation(PDOStatement $stmt): OperationOutcome
+    private function determineOperation(PDOStatement $stmt): ResultType
     {
         $sqlType = strtoupper(strtok(trim($stmt->queryString), ' '));
         
@@ -61,41 +61,41 @@ abstract class Repository
     }
 
     // SELECT
-    private function prepareSelectOperation(PDOStatement $stmt): OperationOutcome
+    private function prepareSelectOperation(PDOStatement $stmt): ResultType
     {
-        return Operation::success($stmt->fetchAll(PDO::FETCH_ASSOC));
+        return Result::Success($stmt->fetchAll(PDO::FETCH_ASSOC));
     }
 
     // INSERT
-    private function prepareInsertOperation(PDOStatement $stmt): OperationOutcome
+    private function prepareInsertOperation(PDOStatement $stmt): ResultType
     {
-        return Operation::success([
+        return Result::Success([
             'affected_rows' => $stmt->rowCount()
         ]);
     }
 
     // MODIFICATION
-    private function prepareModificationOperation(PDOStatement $stmt): OperationOutcome
+    private function prepareModificationOperation(PDOStatement $stmt): ResultType
     {
-        return Operation::success([
+        return Result::Success([
             'affected_rows' => $stmt->rowCount()
         ]);
     }
 
     // GENERIC
-    private function prepareGenericOperation(PDOStatement $stmt): OperationOutcome
+    private function prepareGenericOperation(PDOStatement $stmt): ResultType
     {
-        return Operation::success([
+        return Result::Success([
             'executed' => true,
             'affected_rows' => $stmt->rowCount()
         ]);
     }
 
     // ERRPR
-    private function prepareErrorOperation(PDOStatement $stmt, PDOException $e): OperationOutcome
+    private function prepareErrorOperation(PDOStatement $stmt, PDOException $e): ResultType
     {
-        return Operation::error(
-            Operation::HTTP_INTERNAL_SERVER_ERROR,
+        return Result::Failure(
+            Result::HTTP_INTERNAL_SERVER_ERROR,
             'Database error: ' . $e->getMessage(),
             [
                 'query' => $stmt->queryString,
@@ -109,9 +109,9 @@ abstract class Repository
      * Generates a parameterized INSERT query based on provided data
      * 
      * @param array $data Associative array where keys are column names and values are data to insert
-     * @return OperationOutcome Returns prepared PDO statement wrapped in OperationOutcome
+     * @return ResultType Returns prepared PDO statement wrapped in ResultType
      */
-    protected function buildInsertQuery(array $data): OperationOutcome 
+    protected function buildInsertQuery(array $data): ResultType 
     {
         // Get table name from model (assuming getTableName() exists)
         $table = $this->model::NAME;
@@ -121,8 +121,8 @@ abstract class Repository
         
         // Check we have data to insert
         if (empty($filteredData)) {
-            return Operation::error(
-                Operation::HTTP_BAD_REQUEST, 
+            return Result::Failure(
+                Result::HTTP_BAD_REQUEST, 
                 "No valid data provided for insertion."
             );
         }
@@ -145,11 +145,11 @@ abstract class Repository
                 $stmt->bindValue(":{$column}", $value, $this->getParamType($value));
             }
 
-            return Operation::success($stmt);
+            return Result::Success($stmt);
             
         } catch (\PDOException $e) {
-            return Operation::error(
-                Operation::HTTP_INTERNAL_SERVER_ERROR,
+            return Result::Failure(
+                Result::HTTP_INTERNAL_SERVER_ERROR,
                 "Failed to prepare INSERT statement: " . $e->getMessage()
             );
         }
@@ -161,13 +161,13 @@ abstract class Repository
      * @param array $data Data to update (keys = field names).
      * @param array $where The WHERE conditions
      */
-    protected function buildUpdateQuery(array $data, array $where): OperationOutcome 
+    protected function buildUpdateQuery(array $data, array $where): ResultType 
     {
         $table = $this->model::NAME;
 
         $filteredData = array_filter($data, fn($value) => $value !== null);
         if (empty($filteredData)) {
-            return Operation::error(Operation::HTTP_BAD_REQUEST, "No fields to update.");
+            return Result::Failure(Result::HTTP_BAD_REQUEST, "No fields to update.");
         }
         $setParts = [];
         foreach (array_keys($filteredData) as $field) {
@@ -192,7 +192,7 @@ abstract class Repository
             $stmt->bindValue(":where_{$field}", $value, $this->getParamType($value));
         }
 
-        return Operation::success($stmt);
+        return Result::Success($stmt);
     }
 
     protected function getParamType($value): int 

@@ -12,8 +12,8 @@ namespace Rift\Core\Http\Request;
 
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7Server\ServerRequestCreator;
-use Rift\Core\Databus\Operation;
-use Rift\Core\Databus\OperationOutcome;
+use Rift\Core\Databus\Result;
+use Rift\Core\Databus\ResultType;
 use Psr\Http\Message\ServerRequestInterface;
 use Rift\Contracts\Http\Request\RequestInterface;
 
@@ -21,9 +21,9 @@ class Request implements RequestInterface
 {
     /**
      * Getting PSR-7 request object
-     * @return OperationOutcome - requestObject in result field 
+     * @return ResultType - requestObject in result field 
      */
-    public static function fromGlobals(): OperationOutcome
+    public static function fromGlobals(): ResultType
     {
         try {
             $psr17Factory = new Psr17Factory();
@@ -35,10 +35,10 @@ class Request implements RequestInterface
             );
             
             $psrRequest = $creator->fromGlobals();
-            return Operation::success($psrRequest);
+            return Result::Success($psrRequest);
         } catch (\Throwable $e) {
-            return Operation::error(
-                Operation::HTTP_INTERNAL_SERVER_ERROR, 
+            return Result::Failure(
+                Result::HTTP_INTERNAL_SERVER_ERROR, 
                 'Failed to create request', 
                 ['exception' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );

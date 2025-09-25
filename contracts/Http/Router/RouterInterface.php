@@ -10,20 +10,25 @@
  */
 namespace Rift\Contracts\Http\Router;
 
-use Rift\Core\Databus\OperationOutcome;
+use Rift\Core\Databus\ResultType;
 use DI\Container;
 use Rift\Contracts\Http\RoutesBox\RoutesBoxInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 interface RouterInterface {
     /**
-     * construct router
+     * Router configuration
+     * 
+     * @param RoutesBoxInterface $routesBox
+     * @param Container $container
      */
     public function __construct(RoutesBoxInterface $routesBox, Container $container);
 
     /**
-     * entrypoint of processing request
-     * @return OperationOutcome
+     * Entrypoint of processing request
+     * 
+     * @param ServerRequestInterface $request
+     * @return ResultType
      */
-    public function execute(ServerRequestInterface $request): OperationOutcome;
+    public function execute(ServerRequestInterface $request): ResultType;
 }

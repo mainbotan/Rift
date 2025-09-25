@@ -13,8 +13,8 @@ namespace Rift\Core\Database\Bridge\PDO;
 use PDO;
 use PDOException;
 use Rift\Contracts\Database\Bridge\PDO\ConnectorInterface;
-use Rift\Core\Databus\Operation;
-use Rift\Core\Databus\OperationOutcome;
+use Rift\Core\Databus\Result;
+use Rift\Core\Databus\ResultType;
 
 final class Connector implements ConnectorInterface
 {
@@ -46,12 +46,12 @@ final class Connector implements ConnectorInterface
         );
     }
 
-    public function createAdminConnection(): OperationOutcome
+    public function createAdminConnection(): ResultType
     {
         return $this->createConnection($this->defaultDatabase);
     }
 
-    public function createSchemaConnection(string $schema): OperationOutcome
+    public function createSchemaConnection(string $schema): ResultType
     {
         return $this->createConnection(
             $this->isPostgreSQL() ? $this->defaultDatabase : "{$this->defaultDatabase}_{$schema}",
@@ -59,7 +59,7 @@ final class Connector implements ConnectorInterface
         );
     }
 
-    private function createConnection(string $database, ?string $schema = null): OperationOutcome
+    private function createConnection(string $database, ?string $schema = null): ResultType
     {
         try {
             $dsn = $this->buildDSN($database, $schema);
@@ -69,10 +69,10 @@ final class Connector implements ConnectorInterface
                 $pdo->exec("SET search_path TO $schema");
             }
 
-            return Operation::success($pdo);
+            return Result::Success($pdo);
         } catch (PDOException $e) {
-            return Operation::error(
-                Operation::HTTP_INTERNAL_SERVER_ERROR,
+            return Result::Failure(
+                Result::HTTP_INTERNAL_SERVER_ERROR,
                 'Database connection failed',
                 [
                     'database' => $database,

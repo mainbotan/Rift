@@ -13,8 +13,8 @@ namespace Rift\Core\Repositories;
 use PDO;
 use PDOException;
 use Rift\Core\Database\Bridge\PDO\Connector;
-use Rift\Core\Databus\Operation;
-use Rift\Core\Databus\OperationOutcome;
+use Rift\Core\Databus\Result;
+use Rift\Core\Databus\ResultType;
 use Rift\Core\Database\Connect;
 
 abstract class RepositoriesRouter extends Operation
@@ -27,7 +27,7 @@ abstract class RepositoriesRouter extends Operation
         
     }
 
-    private function getConnection(): OperationOutcome
+    private function getConnection(): ResultType
     {
         // Проверяем живое ли соединение
         if (isset($this->connections[$this->schema])) {

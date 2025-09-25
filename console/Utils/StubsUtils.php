@@ -10,8 +10,8 @@
  */
 namespace Rift\Console\Utils;
 
-use Rift\Core\Databus\OperationOutcome;
-use Rift\Core\Databus\Operation;
+use Rift\Core\Databus\ResultType;
+use Rift\Core\Databus\Result;
 
 class StubsUtils extends Operation
 {
@@ -30,7 +30,7 @@ class StubsUtils extends Operation
     public static function initProjectStructure(
         string $targetRoot,
         bool $overwrite = false
-    ): OperationOutcome {
+    ): ResultType {
         $sourceRoot = dirname(__DIR__, 3) . self::$stubsBasePath;
         
         return self::copyStructure(
@@ -53,7 +53,7 @@ class StubsUtils extends Operation
         string $targetRoot,
         array $structureMap,
         bool $overwrite = false
-    ): OperationOutcome {
+    ): ResultType {
         $result = [
             'created' => [],
             'skipped' => [],
@@ -105,7 +105,7 @@ class StubsUtils extends Operation
         string $source,
         string $target,
         bool $overwrite = false
-    ): OperationOutcome {
+    ): ResultType {
         $target = str_replace('.stub', '', $target);
 
         if (!file_exists($source)) {
@@ -158,7 +158,7 @@ class StubsUtils extends Operation
         string $source,
         string $target,
         bool $overwrite = false
-    ): OperationOutcome {
+    ): ResultType {
         if (!is_dir($source)) {
             return self::error(
                 self::HTTP_NOT_FOUND,
@@ -221,7 +221,7 @@ class StubsUtils extends Operation
     /**
      * Создает директорию если ее нет
      */
-    public static function ensureDirectory(string $path): OperationOutcome
+    public static function ensureDirectory(string $path): ResultType
     {
         if (is_dir($path)) {
             return self::success(['path' => $path]);

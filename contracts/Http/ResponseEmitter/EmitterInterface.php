@@ -11,7 +11,7 @@
 namespace Rift\Contracts\Http\ResponseEmitter;
 
 use Psr\Http\Message\ServerRequestInterface;
-use Rift\Core\Databus\OperationOutcome;
+use Rift\Core\Databus\ResultType;
 
 interface EmitterInterface {
     /**
@@ -19,7 +19,7 @@ interface EmitterInterface {
      * data output
      * @return void
      */
-    public function emit(OperationOutcome $outcome, ServerRequestInterface $request): void;
+    public function emit(ResultType $outcome, ServerRequestInterface $request): void;
 
     /**
      * supports public method
